@@ -1,9 +1,17 @@
-from indexing import split_doc_by_regex, CHAPTER_REGEX, PARAGRAPH_REGEX
+from indexing import (
+    read_and_split_document_by_paragraph,
+    split_doc_by_regex,
+    CHAPTER_REGEX,
+    PARAGRAPH_REGEX,
+    read_and_split_document_by_chapter,
+    read_and_split_document_by_paragraph
+)
+
 from langchain.schema import Document
 
 def test_chapter_split_by_regex():
-    content = """Kapitel 1 \n § 1. Something about renting.\n § 2. Something about renting again. \n
-    Kapitel 2 \n § 3. More renting stuff.\n § 4. Even more renting stuff."""
+    content = """Kapitel 1\n § 1. Something about renting.\n § 2. Something about renting again. \n
+    Kapitel 2\n § 3. More renting stuff.\n § 4. Even more renting stuff."""
 
     doc = Document(
         page_content=content,
@@ -38,3 +46,25 @@ def test_paragraph_split_by_regex():
     assert chunks[2].metadata["heading"] == "§ 3."
     assert chunks[3].page_content == "§ 4. Even more renting stuff."
     assert chunks[3].metadata["heading"] == "§ 4."
+
+def test_read_all_chapters():
+    from indexing import read_and_split_document_by_chapter
+    file_path = "src/data/lejeloven_2025.pdf"
+    chunks = read_and_split_document_by_chapter(file_path)
+    chapter_numbers = [f"Kapitel {i}" for i in range(1, len(chunks)+1)]
+    extracted_headings = [chunk.metadata["heading"] for chunk in chunks]
+    assert chapter_numbers == extracted_headings
+    assert len(chunks) == 29 #check that we have 29 chapters in the document
+
+    
+def test_extract_all_paragraphs():
+
+    file_path = "src/data/lejeloven_2025.pdf"
+    chapters = read_and_split_document_by_chapter(file_path)
+    paragraphs = read_and_split_document_by_paragraph(chapters)
+    paragraphs_numbers = [f"§ {i}." for i in range(1, len(paragraphs)+1)]
+    extracted_headings = [chunk.metadata["heading"] for chunk in paragraphs]
+    missing_headings = set(paragraphs_numbers) - set(extracted_headings)
+    assert paragraphs_numbers == extracted_headings
+    assert len(paragraphs) == 213  #check that we have 212 paragraphs in the document
+    

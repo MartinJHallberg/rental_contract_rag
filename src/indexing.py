@@ -4,8 +4,8 @@ from langchain.schema import Document
 import re
 
 
-CHAPTER_REGEX = r"(Kapitel \d+.*?)\n"
-PARAGRAPH_REGEX = r"((?<=[\w\.]\n)§ \d{1,3}\.)"
+CHAPTER_REGEX = r"(Kapitel \d+)\n"
+PARAGRAPH_REGEX = r"((?:\x0c|(?<=[\w\.]\n))§ \d{1,3}\.)"
 
 
 def load_pdf_single(file_path: str)-> list[Document]:
@@ -37,3 +37,16 @@ def split_doc_by_regex(doc:Document,regex_pattern: str)-> list[Document]:
         chunks.append(Document(page_content=chunk, metadata={"heading": heading}))
     
     return chunks
+
+def read_and_split_document_by_chapter(file_path: str)-> list[Document]:
+    documents = load_pdf_single(file_path)
+    chapters = split_doc_by_regex(documents[0], CHAPTER_REGEX)
+    return chapters
+
+
+def read_and_split_document_by_paragraph(chapters: list[Document])-> list[Document]:
+    paragraphs = [split_doc_by_regex(doc, PARAGRAPH_REGEX) for doc in chapters]
+
+    paragraphs = [para for sublist in paragraphs for para in sublist]  # Flatten the list
+    
+    return paragraphs
