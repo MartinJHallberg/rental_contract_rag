@@ -1,10 +1,8 @@
-from typing import Any, Optional
 from langchain_core.runnables import RunnablePassthrough
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.vectorstores import VectorStoreRetriever
 from langchain_core.language_models import BaseLanguageModel
 from langchain_core.prompts import BasePromptTemplate
-from langchain.schema import Document
 
 
 class SimpleRAGChain:
