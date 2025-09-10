@@ -74,3 +74,21 @@ def test_extract_all_paragraphs():
 
     parent_titles = [chunk.metadata["parent_title"] for chunk in paragraphs]
     assert all(title in chapter_numbers for title in parent_titles)
+
+
+def test_page_to_paragraph_mapping():
+    from indexing import load_pdf_by_page, add_page_numbers_to_paragraphs, read_and_split_document_by_paragraph
+    file_path = "src/data/lejeloven_2025.pdf"
+    documents = load_pdf_by_page(file_path)
+    chapters = read_and_split_document_by_chapter(file_path)
+    paragraphs = read_and_split_document_by_paragraph(chapters)
+    paragraphs_with_page_numbers = add_page_numbers_to_paragraphs(paragraphs, documents, PARAGRAPH_REGEX)
+
+    # Check that each paragraph now has a page number in its metadata
+    for para in paragraphs_with_page_numbers:
+        assert "page" in para.metadata
+        assert isinstance(para.metadata["page"], int)
+
+    # Check that page numbers are increasing by paragraph
+    page_numbers = [para.metadata["page"] for para in paragraphs_with_page_numbers]
+    assert page_numbers == sorted(page_numbers)

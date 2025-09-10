@@ -5,7 +5,7 @@ import re
 
 
 CHAPTER_REGEX = r"(Kapitel \d+)\n"
-PARAGRAPH_REGEX = r"((?:\x0c|(?<=[\w\.]\n))§ \d{1,3}\.)"
+PARAGRAPH_REGEX = r"((?:^|\x0c|(?<=[\w\.]\n))§ \d{1,3}\.)" # Matches "§ 1.", "§ 23." at start of line or after a form feed or after a newline
 
 
 def load_pdf_single(file_path: str)-> list[Document]:
@@ -49,5 +49,22 @@ def read_and_split_document_by_paragraph(chapters: list[Document])-> list[Docume
     paragraphs = [split_doc_by_regex(doc, PARAGRAPH_REGEX) for doc in chapters]
 
     paragraphs = [para for sublist in paragraphs for para in sublist]  # Flatten the list
+    
+    return paragraphs
+
+
+def extract_paragraphs_from_page(doc:Document, regex_pattern:str)-> dict[int,int]:
+    paragraphs = re.findall(regex_pattern, doc.page_content)
+
+    page_paragraph = {int(re.findall(r"\d{1,3}", para)[0]):doc.metadata["page"]  for para in paragraphs}
+    return page_paragraph
+
+def add_page_numbers_to_paragraphs(paragraphs: list[Document], documents: list[Document], regex:str)-> list[Document]:
+    paragraph_pages = [extract_paragraphs_from_page(doc, regex) for doc in documents]
+    paragraph_pages = {k:v for d in paragraph_pages for k,v in d.items()} # unnest list
+
+    for para in paragraphs:
+        para_number = int(re.findall(r"\d{1,3}", para.metadata["title"])[0])
+        para.metadata["page"] = paragraph_pages.get(para_number, None)
     
     return paragraphs
