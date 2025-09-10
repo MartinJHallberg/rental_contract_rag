@@ -26,16 +26,17 @@ def load_pdf_by_page(file_paths: str)-> list[Document]:
 
 def split_doc_by_regex(doc:Document,regex_pattern: str)-> list[Document]:
     text = doc.page_content
+    parent_title = doc.metadata.get("title", "")
     splits = re.split(regex_pattern, text)  # Capturing group includes the separator
     chunks = []
     for i in range(1, len(splits), 2):
-        heading = splits[i]
+        title = splits[i]
         content = splits[i+1] if i+1 < len(splits) else ""
         content = content.strip()
-        heading = heading.strip()
-        chunk = heading + " " + content
-        chunks.append(Document(page_content=chunk, metadata={"heading": heading}))
-    
+        title = title.strip()
+        chunk = title + " " + content
+        chunks.append(Document(page_content=chunk, metadata={"title": title, "parent_title": parent_title}))
+
     return chunks
 
 def read_and_split_document_by_chapter(file_path: str)-> list[Document]:

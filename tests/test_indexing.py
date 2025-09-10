@@ -22,9 +22,9 @@ def test_chapter_split_by_regex():
     
     assert len(chunks) == 2
     assert chunks[0].page_content == "Kapitel 1 § 1. Something about renting.\n § 2. Something about renting again."
-    assert chunks[0].metadata["heading"] == "Kapitel 1"
+    assert chunks[0].metadata["title"] == "Kapitel 1"
     assert chunks[1].page_content == "Kapitel 2 § 3. More renting stuff.\n § 4. Even more renting stuff."
-    assert chunks[1].metadata["heading"] == "Kapitel 2"
+    assert chunks[1].metadata["title"] == "Kapitel 2"
 
 
 def test_paragraph_split_by_regex():
@@ -39,20 +39,20 @@ def test_paragraph_split_by_regex():
 
     assert len(chunks) == 4
     assert chunks[0].page_content == "§ 1. Something about renting."
-    assert chunks[0].metadata["heading"] == "§ 1."
+    assert chunks[0].metadata["title"] == "§ 1."
     assert chunks[1].page_content == "§ 2. Something about renting again."
-    assert chunks[1].metadata["heading"] == "§ 2."
+    assert chunks[1].metadata["title"] == "§ 2."
     assert chunks[2].page_content == "§ 3. More renting stuff."
-    assert chunks[2].metadata["heading"] == "§ 3."
+    assert chunks[2].metadata["title"] == "§ 3."
     assert chunks[3].page_content == "§ 4. Even more renting stuff."
-    assert chunks[3].metadata["heading"] == "§ 4."
+    assert chunks[3].metadata["title"] == "§ 4."
 
 def test_read_all_chapters():
     from indexing import read_and_split_document_by_chapter
     file_path = "src/data/lejeloven_2025.pdf"
     chunks = read_and_split_document_by_chapter(file_path)
     chapter_numbers = [f"Kapitel {i}" for i in range(1, len(chunks)+1)]
-    extracted_headings = [chunk.metadata["heading"] for chunk in chunks]
+    extracted_headings = [chunk.metadata["title"] for chunk in chunks]
     assert chapter_numbers == extracted_headings
     assert len(chunks) == 29 #check that we have 29 chapters in the document
 
@@ -63,8 +63,14 @@ def test_extract_all_paragraphs():
     chapters = read_and_split_document_by_chapter(file_path)
     paragraphs = read_and_split_document_by_paragraph(chapters)
     paragraphs_numbers = [f"§ {i}." for i in range(1, len(paragraphs)+1)]
-    extracted_headings = [chunk.metadata["heading"] for chunk in paragraphs]
+    extracted_headings = [chunk.metadata["title"] for chunk in paragraphs]
     missing_headings = set(paragraphs_numbers) - set(extracted_headings)
+
     assert paragraphs_numbers == extracted_headings
     assert len(paragraphs) == 213  #check that we have 212 paragraphs in the document
-    
+
+    # Check that chapter titles are correctly assigned as parent titles
+    chapter_numbers = [f"Kapitel {i}" for i in range(1, len(chapters)+1)]
+
+    parent_titles = [chunk.metadata["parent_title"] for chunk in paragraphs]
+    assert all(title in chapter_numbers for title in parent_titles)
