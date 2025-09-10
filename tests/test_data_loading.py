@@ -1,10 +1,12 @@
-from indexing import (
+from data_loading import (
     read_and_split_document_by_paragraph,
     split_doc_by_regex,
     CHAPTER_REGEX,
     PARAGRAPH_REGEX,
     read_and_split_document_by_chapter,
-    read_and_split_document_by_paragraph
+    read_and_split_document_by_paragraph,
+    load_pdf_by_page,
+    add_page_numbers_to_paragraphs,
 )
 
 from langchain.schema import Document
@@ -48,7 +50,6 @@ def test_paragraph_split_by_regex():
     assert chunks[3].metadata["title"] == "§ 4."
 
 def test_read_all_chapters():
-    from indexing import read_and_split_document_by_chapter
     file_path = "src/data/lejeloven_2025.pdf"
     chunks = read_and_split_document_by_chapter(file_path)
     chapter_numbers = [f"Kapitel {i}" for i in range(1, len(chunks)+1)]
@@ -77,7 +78,6 @@ def test_extract_all_paragraphs():
 
 
 def test_page_to_paragraph_mapping():
-    from indexing import load_pdf_by_page, add_page_numbers_to_paragraphs, read_and_split_document_by_paragraph
     file_path = "src/data/lejeloven_2025.pdf"
     documents = load_pdf_by_page(file_path)
     chapters = read_and_split_document_by_chapter(file_path)
