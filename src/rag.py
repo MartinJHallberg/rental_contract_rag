@@ -1,13 +1,3 @@
-import os
-from dotenv import load_dotenv
-
-load_dotenv()
-os.environ["LANGCHAIN_TRACING_V2"] = "true"
-os.environ["LANGCHAIN_API_KEY"] = os.getenv("LANGCHAIN_API_KEY")
-os.environ["LANGCHAIN_PROJECT"] = "rental-contract-rag"
-os.environ["OPENAI_API_KEY"] = os.getenv("OPENAI_API_KEY")
-
-
 from typing import Any, Optional
 from langchain_core.runnables import RunnablePassthrough
 from langchain_core.output_parsers import StrOutputParser
