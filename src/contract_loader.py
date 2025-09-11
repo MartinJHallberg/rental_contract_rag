@@ -101,13 +101,35 @@ class RentalContract(BaseModel):
     file_name: str = Field(description="File name of the contract")
 
 def parse_contract_pdf_to_text(file_path: str) -> RentalContract:
+    """Parse a PDF rental contract to text using OCR"""
+
+    # Ensure cache directory exists
+    cache_dir = CACHE_DIR
+    os.makedirs(cache_dir, exist_ok=True)
+
+    # Create a unique cache key based on file path
+    cache_key_str = f"pdf_parse:{file_path}"
+    cache_key_hash = hashlib.sha256(cache_key_str.encode("utf-8")).hexdigest()
+    cache_file_path = os.path.join(cache_dir, f"{cache_key_hash}.json")
+
+    # Try to load from cache
+    if os.path.exists(cache_file_path):
+        with open(cache_file_path, "r", encoding="utf-8") as f:
+            cached_data = json.load(f)
+        return RentalContract(**cached_data)
+
+    # If not in cache, process the PDF
     pages = convert_from_path(
         file_path,
-        poppler_path=r"C:\Projects\poppler-25.07.0\Library\bin",
     )
     text = ""
     for page in pages:
         text += pytesseract.image_to_string(page)
+
+    # Save to cache
+    with open(cache_file_path, "w", encoding="utf-8") as f:
+        json.dump({"text": text, "file_name": Path(file_path).name}, f, ensure_ascii=False, indent=2)
+
     return RentalContract(text=text, file_name=Path(file_path).name)
 
 
@@ -148,7 +170,7 @@ def extract_contract_info(rental_contract: RentalContract) -> ContractInfo:
     os.makedirs(cache_dir, exist_ok=True)
 
     # Create a unique cache key based on file name and prompt
-    cache_key_str = f"{rental_contract.file_name}:{prompt_contract_all_info}"
+    cache_key_str = f"contract_info_{rental_contract.file_name}:{prompt_contract_all_info}"
     cache_key_hash = hashlib.sha256(cache_key_str.encode("utf-8")).hexdigest()
     cache_file_path = os.path.join(cache_dir, f"{cache_key_hash}.json")
 

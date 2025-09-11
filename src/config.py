@@ -20,7 +20,7 @@ VECTOR_STORE_DIR = Path("src/data/vector_stores")
 EMBEDDING_MODEL = "text-embedding-3-small"
 COLLECTION_NAME = "rental_law_2025"
 CACHE_DIR = Path("src/data/cache")
-LLM_MODEL = "gpt-3.5-turbo"
+LLM_MODEL = "gpt-4o-mini"
 LLM_TEMPERATURE = 0.0
 
 # Setup LangSmith tracing

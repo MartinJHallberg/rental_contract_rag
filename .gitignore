@@ -25,3 +25,4 @@ dist/
 
 # Vector store directory
 src/data/vector_stores/
+
