@@ -4,10 +4,10 @@ from langchain_core.vectorstores import (
     VectorStoreRetriever,
     InMemoryVectorStore
     )
-from langchain_community.vectorstores import Chroma
+from langchain_chroma import Chroma
 from langchain_core.language_models import BaseLanguageModel
 from langchain_core.prompts import BasePromptTemplate
-from langchain_community.chat_models import ChatOpenAI
+from langchain_openai import ChatOpenAI
 from langchain_openai.embeddings import OpenAIEmbeddings
 from contract_loader import ContractInfo
 from data_loading import (

@@ -7,7 +7,9 @@ load_dotenv()
 
 # LangSmith Configuration
 LANGCHAIN_API_KEY = os.getenv("LANGCHAIN_API_KEY")
-LANGCHAIN_PROJECT = os.getenv("LANGCHAIN_PROJECT", "rental-contract-rag")
+LANGCHAIN_PROJECT = os.getenv("LANGCHAIN_PROJECT")
+if not LANGCHAIN_PROJECT:
+    raise ValueError("LANGCHAIN_PROJECT environment variable is required")
 ENABLE_TRACING = os.getenv("ENABLE_TRACING", "true").lower() == "true"
 
 # OpenAI Configuration  
