@@ -1,9 +1,6 @@
 from langchain_core.runnables import RunnablePassthrough
 from langchain_core.output_parsers import StrOutputParser
-from langchain_core.vectorstores import (
-    VectorStoreRetriever,
-    InMemoryVectorStore
-    )
+from langchain_core.vectorstores import (VectorStoreRetriever)
 from langchain_chroma import Chroma
 from langchain_core.language_models import BaseLanguageModel
 from langchain_core.prompts import BasePromptTemplate
@@ -18,7 +15,7 @@ from langchain import hub
 
 from pathlib import Path
 # Import configuration (this automatically sets up LangSmith)
-from config import VECTOR_STORE_DIR, EMBEDDING_MODEL, COLLECTION_NAME
+from config import VECTOR_STORE_DIR, EMBEDDING_MODEL, COLLECTION_NAME, LLM_MODEL, LLM_TEMPERATURE
 
 def build_rental_law_collection(
     file_path: str = "src/data/lejeloven_2025.pdf",
@@ -123,7 +120,7 @@ class RAGChain:
         llm: BaseLanguageModel = None,
     ):
         self.retriever = retriever or load_rental_law_retriever()
-        self.llm = llm or ChatOpenAI(model="gpt-4", temperature=0)
+        self.llm = llm or ChatOpenAI(model=LLM_MODEL, temperature=LLM_TEMPERATURE)
         self.prompt = prompt or hub.pull("rlm/rag-prompt")
         self._chain = self._build_chain()
 

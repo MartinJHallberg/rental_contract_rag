@@ -1,14 +1,18 @@
 from langchain_core.prompts import PromptTemplate
 from langchain.output_parsers import PydanticOutputParser
-from langchain import LLMChain
+from langchain.chains import LLMChain
 from langchain_community.chat_models import ChatOpenAI
 from pdf2image import convert_from_path
 import pytesseract
-
+from pathlib import Path
 
 from pydantic import BaseModel, Field
 from typing import Dict, Optional
 from langchain.output_parsers import PydanticOutputParser
+import os
+import hashlib
+import json
+from config import CACHE_DIR, LLM_MODEL, LLM_TEMPERATURE
 
 
 class ContractInfo(BaseModel):
@@ -90,7 +94,13 @@ class ContractInfo(BaseModel):
         return example.model_dump_json(indent=2)
 
 
-def parse_contract_pdf_to_text(file_path: str) -> str:
+class RentalContract(BaseModel):
+    """Pydantic model for rental contract. Created to allow for caching of LLM calls"""
+
+    text: str = Field(description="Full text of the rental contract")
+    file_name: str = Field(description="File name of the contract")
+
+def parse_contract_pdf_to_text(file_path: str) -> RentalContract:
     pages = convert_from_path(
         file_path,
         poppler_path=r"C:\Projects\poppler-25.07.0\Library\bin",
@@ -98,10 +108,10 @@ def parse_contract_pdf_to_text(file_path: str) -> str:
     text = ""
     for page in pages:
         text += pytesseract.image_to_string(page)
-    return text
+    return RentalContract(text=text, file_name=Path(file_path).name)
 
 
-def extract_contract_info(contract_text: str) -> ContractInfo:
+def extract_contract_info(rental_contract: RentalContract) -> ContractInfo:
     """Extract key information from a rental contract using an LLM"""
 
     # Create Pydantic output parser
@@ -120,7 +130,7 @@ def extract_contract_info(contract_text: str) -> ContractInfo:
     {{contract_text}}
     """
 
-    llm = ChatOpenAI(model_name="gpt-4-turbo", temperature=0)
+    llm = ChatOpenAI(model_name=LLM_MODEL, temperature=LLM_TEMPERATURE)
 
     prompt_template = PromptTemplate(
         template=prompt_contract_all_info,
@@ -133,14 +143,33 @@ def extract_contract_info(contract_text: str) -> ContractInfo:
         prompt=prompt_template,
     )
 
+    # Ensure cache directory exists
+    cache_dir = CACHE_DIR
+    os.makedirs(cache_dir, exist_ok=True)
+
+    # Create a unique cache key based on file name and prompt
+    cache_key_str = f"{rental_contract.file_name}:{prompt_contract_all_info}"
+    cache_key_hash = hashlib.sha256(cache_key_str.encode("utf-8")).hexdigest()
+    cache_file_path = os.path.join(cache_dir, f"{cache_key_hash}.json")
+
+    # Try to load from cache
+    if os.path.exists(cache_file_path):
+        with open(cache_file_path, "r", encoding="utf-8") as f:
+            cached_data = json.load(f)
+        return ContractInfo(**cached_data)
+
     # Get the raw output and parse with Pydantic
-    raw_output = llm_chain.run(contract_text=contract_text)
+    raw_output = llm_chain.run(contract_text=rental_contract.text)
     result = parser.parse(raw_output)
+
+    # Save to cache
+    with open(cache_file_path, "w", encoding="utf-8") as f:
+        json.dump(result.model_dump(), f, ensure_ascii=False, indent=2)
 
     return result
 
 
 def load_contract_and_extract_info(file_path: str) -> ContractInfo:
-    contract_text = parse_contract_pdf_to_text(file_path)
-    contract_info = extract_contract_info(contract_text)
+    contract = parse_contract_pdf_to_text(file_path)
+    contract_info = extract_contract_info(contract)
     return contract_info

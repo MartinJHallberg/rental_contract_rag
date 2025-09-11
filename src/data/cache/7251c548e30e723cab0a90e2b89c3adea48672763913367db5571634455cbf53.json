@@ -1,0 +1,25 @@
+{
+  "landlord": "Martin Hallberg",
+  "tenant": "Martin Hallberg",
+  "monthly_rental_amount": "3000 kr",
+  "payment_terms": "Monthly, due on the first of each month",
+  "rental_type": "Subrental",
+  "property_address": "Nørrebro, København",
+  "lease_start_date": "2025-11-01",
+  "lease_duration": "Indefinite until terminated by notice",
+  "termination_conditions": "Tenant can terminate with 3 months' notice, landlord under §§ 170 and 171",
+  "price_adjustments": "Annually adjusted based on Denmark's Statistics net price index",
+  "deposit_amount": "9000 kr",
+  "prepaid_rent": "9000 kr",
+  "amenities": "Access to common laundry, garden, bike parking, garage",
+  "utilities": {
+    "heating": "Tenant pays a conto heating contribution of 200 kr monthly",
+    "water": "Tenant pays a conto water contribution of 100 kr monthly",
+    "electricity": "Included in rent",
+    "internet": "Not specified"
+  },
+  "renters_responsibilities": {
+    "inside_maintenance": "Tenant is responsible for interior maintenance including painting, whitening, wallpapering, and floor treatment",
+    "outside_maintenance": "Landlord responsible except for locks and keys which are tenant's responsibility"
+  }
+}
