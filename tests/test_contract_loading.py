@@ -2,7 +2,7 @@ import pytest
 from contract_loader import (
     parse_contract_pdf_to_text,
     load_contract_and_extract_info,
-    ContractInfo
+    ContractInfo,
 )
 
 
