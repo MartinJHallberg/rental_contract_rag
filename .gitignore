@@ -23,5 +23,5 @@ dist/
 # Environment variables
 .env
 
-# File types
-.sqlite3
+# Vector store directory
+src/data/vector_stores/
