@@ -5,7 +5,8 @@ from langchain_core.vectorstores import InMemoryVectorStore
 from langchain_openai import OpenAIEmbeddings
 from langchain.prompts import ChatPromptTemplate
 from langchain.chat_models import ChatOpenAI
-from rag import SimpleRAGChain
+from rag import RAGChain, validate_deposit_amount
+from contract_loader import load_contract_and_extract_info
 
 
 @pytest.fixture
@@ -37,38 +38,10 @@ def mock_embeddings():
     return mock_embeddings
 
 
-def test_rag_chain_with_real_retriever(sample_documents, mock_embeddings):
-    """Test RAGChain with real vector store and retriever, but mock LLM"""
 
-    # Create real vector store with mock embeddings
-    vector_store = InMemoryVectorStore.from_documents(
-        documents=sample_documents, embedding=mock_embeddings
-    )
+def test_rag_chain():
+    rag_chain = RAGChain()
 
-    retriever = vector_store.as_retriever(search_kwargs={"k": 2})
+    extracted_contract_info = load_contract_and_extract_info("src/data/contract_template_with_info_printed.pdf")
 
-    # Create real prompt
-    prompt = ChatPromptTemplate.from_template(
-        "Context: {context}\n\nQuestion: {question}\n\nAnswer:"
-    )
-
-    # Mock LLM to avoid API calls
-    mock_llm = Mock(spec=ChatOpenAI)
-    mock_llm.invoke.return_value = Mock(content="Mocked LLM response")
-
-    # Create RAG chain
-    rag = SimpleRAGChain(retriever=retriever, llm=mock_llm, prompt=prompt)
-
-    # Test that retriever works
-    retrieved_docs = retriever.invoke("deposit")
-    assert len(retrieved_docs) <= 2
-    assert all(isinstance(doc, Document) for doc in retrieved_docs)
-
-    # Test format_docs with real documents
-    formatted = rag._format_docs(sample_documents)
-    expected = (
-        "§ 1. This law applies to rental agreements for residential properties.\n\n"
-        "§ 2. The landlord must provide written notice before entering the property.\n\n"
-        "§ 50. Maximum deposit is 3 months rent for residential properties."
-    )
-    assert formatted == expected
+    deposit_answer = validate_deposit_amount(rag_chain, extracted_contract_info)

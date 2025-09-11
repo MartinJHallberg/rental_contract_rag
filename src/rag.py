@@ -10,6 +10,7 @@ from data_loading import (
     read_and_split_document_by_chapter,
     read_and_split_document_by_paragraph,
 )
+from langchain import hub
 
 
 def create_rental_law_retriever(
@@ -34,18 +35,18 @@ def format_docs(docs):
     return "\n\n".join(doc.page_content for doc in docs)
 
 
-class SimpleRAGChain:
+class RAGChain:
     """Simple RAG chain for asking questions about rental law"""
     
     def __init__(
         self,
-        prompt: BasePromptTemplate,
+        prompt: BasePromptTemplate=None,
         retriever: VectorStoreRetriever = None,
         llm: BaseLanguageModel = None,
     ):
         self.retriever = retriever or create_rental_law_retriever()
         self.llm = llm or ChatOpenAI(model="gpt-4", temperature=0)
-        self.prompt = prompt
+        self.prompt = prompt or hub.pull("rlm/rag-prompt")
         self._chain = self._build_chain()
 
     def _build_chain(self):
@@ -66,19 +67,19 @@ class SimpleRAGChain:
 
 
 # Contract validation functions
-def validate_deposit_amount(rag_chain: SimpleRAGChain, contract_info: ContractInfo) -> str:
+def validate_deposit_amount(rag_chain: RAGChain, contract_info: ContractInfo) -> str:
     """Check if deposit amount is legal"""
     question = f"Is a deposit of {contract_info.deposit_amount} legal for a rental property with monthly rent of {contract_info.monthly_rental_amount}?"
     return rag_chain.ask(question)
 
 
-def validate_termination_conditions(rag_chain: SimpleRAGChain, contract_info: ContractInfo) -> str:
+def validate_termination_conditions(rag_chain: RAGChain, contract_info: ContractInfo) -> str:
     """Check if termination conditions are legal"""
     question = f"Are these termination conditions legal: {contract_info.termination_conditions}?"
     return rag_chain.ask(question)
 
 
-def validate_price_adjustments(rag_chain: SimpleRAGChain, contract_info: ContractInfo) -> str:
+def validate_price_adjustments(rag_chain: RAGChain, contract_info: ContractInfo) -> str:
     """Check if price adjustment conditions are legal"""
     question = f"Are these price adjustment conditions legal: {contract_info.price_adjustments}?"
     return rag_chain.ask(question)
