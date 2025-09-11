@@ -36,3 +36,5 @@ class SimpleRAGChain:
     def invoke(self, question: str) -> str:
         """Run the RAG chain with a question"""
         return self._chain.invoke(question)
+
+
