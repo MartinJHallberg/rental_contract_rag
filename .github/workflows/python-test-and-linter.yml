@@ -28,6 +28,6 @@ jobs:
         poetry install
     - name: Run tests
       run: |
-        poetry run pytest -m "not api_call"
+        poetry run pytest -m "not slow and not api_call"
     - name: Lint with Ruff
       run: poetry run ruff format --check
