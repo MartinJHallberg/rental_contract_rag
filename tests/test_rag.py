@@ -42,6 +42,4 @@ def mock_embeddings():
 def test_rag_chain():
     rag_chain = RAGChain()
 
-    extracted_contract_info = load_contract_and_extract_info("src/data/contract_template_with_info_printed.pdf")
-
     deposit_answer = validate_deposit_amount(rag_chain, extracted_contract_info)
