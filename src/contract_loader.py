@@ -7,8 +7,7 @@ import pytesseract
 from pathlib import Path
 
 from pydantic import BaseModel, Field
-from typing import Dict, Optional
-from langchain.output_parsers import PydanticOutputParser
+from typing import Dict
 import os
 import hashlib
 import json

@@ -38,6 +38,8 @@ def mock_embeddings():
 def test_rag_chain():
     rag_chain = RAGChain()
 
-    deposit_answer = validate_deposit_amount(rag_chain, deposit_amount="50000 DKK", monthly_rental_amount="4000 DKK")
+    deposit_answer = validate_deposit_amount(
+        rag_chain, deposit_amount="50000 DKK", monthly_rental_amount="4000 DKK"
+    )
     assert isinstance(deposit_answer, LLMOutput)
     assert deposit_answer.should_be_checked is True

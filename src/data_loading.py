@@ -110,27 +110,26 @@ def build_rental_law_collection(
                     f"Collection '{collection_name}' already exists. Use force_rebuild=True to recreate."
                 )
                 return
-        except:
-            pass  # Collection doesn't exist, continue with creation
+        except Exception as e:
+            print(f"Error loading collection '{collection_name}': {e}")
+            print(f"Building document collection '{collection_name}'...")
 
-    print(f"Building document collection '{collection_name}'...")
+            # Process documents
+            embeddings = OpenAIEmbeddings(model=embedding_model)
+            chapters = read_and_split_document_by_chapter(file_path)
+            paragraphs = read_and_split_document_by_paragraph(chapters)
 
-    # Process documents
-    embeddings = OpenAIEmbeddings(model=embedding_model)
-    chapters = read_and_split_document_by_chapter(file_path)
-    paragraphs = read_and_split_document_by_paragraph(chapters)
+            # Create Chroma vector store
+            VECTOR_STORE_DIR.mkdir(exist_ok=True, parents=True)
+            Chroma.from_documents(
+                documents=paragraphs,
+                embedding=embeddings,
+                collection_name=collection_name,
+                persist_directory=persist_directory,
+            )
 
-    # Create Chroma vector store
-    VECTOR_STORE_DIR.mkdir(exist_ok=True, parents=True)
-    vector_store = Chroma.from_documents(
-        documents=paragraphs,
-        embedding=embeddings,
-        collection_name=collection_name,
-        persist_directory=persist_directory,
-    )
-
-    print(f"Document collection saved to {persist_directory}")
-    print(f"Total documents: {len(paragraphs)}")
+            print(f"Document collection saved to {persist_directory}")
+            print(f"Total documents: {len(paragraphs)}")
 
 
 def load_rental_law_retriever(
@@ -162,7 +161,7 @@ def load_rental_law_retriever(
         if vector_store._collection.count() == 0:
             raise ValueError("Collection is empty")
 
-    except Exception as e:
+    except Exception:
         print(f"Collection '{collection_name}' not found. Building it now...")
         build_rental_law_collection()
 
