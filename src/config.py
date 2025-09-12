@@ -12,7 +12,7 @@ if not LANGCHAIN_PROJECT:
     raise ValueError("LANGCHAIN_PROJECT environment variable is required")
 ENABLE_TRACING = os.getenv("ENABLE_TRACING", "true").lower() == "true"
 
-# OpenAI Configuration  
+# OpenAI Configuration
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
 # RAG Configuration

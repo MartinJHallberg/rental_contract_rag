@@ -1,7 +1,10 @@
 from langchain_community.document_loaders import PyPDFLoader
 from langchain.schema import Document
 import re
-
+from langchain_chroma import Chroma
+from langchain_openai.embeddings import OpenAIEmbeddings
+from langchain_core.vectorstores import VectorStoreRetriever
+from config import VECTOR_STORE_DIR, EMBEDDING_MODEL, COLLECTION_NAME
 
 CHAPTER_REGEX = r"(Kapitel \d+)\n"
 PARAGRAPH_REGEX = r"((?:^|\x0c|(?<=[\w\.]\n))§ \d{1,3}\.)"  # Matches "§ 1.", "§ 23." at start of line or after a form feed or after a newline
@@ -81,3 +84,94 @@ def add_page_numbers_to_paragraphs(
         para.metadata["page"] = paragraph_pages.get(para_number, None)
 
     return paragraphs
+
+
+def build_rental_law_collection(
+    file_path: str = "src/data/lejeloven_2025.pdf",
+    collection_name: str = COLLECTION_NAME,
+    embedding_model: str = EMBEDDING_MODEL,
+    force_rebuild: bool = False,
+):
+    """Build a persistent document collection using Chroma"""
+
+    persist_directory = str(VECTOR_STORE_DIR)
+
+    # Check if collection exists
+    if not force_rebuild:
+        try:
+            embeddings = OpenAIEmbeddings(model=embedding_model)
+            existing_db = Chroma(
+                collection_name=collection_name,
+                embedding_function=embeddings,
+                persist_directory=persist_directory,
+            )
+            if existing_db._collection.count() > 0:
+                print(
+                    f"Collection '{collection_name}' already exists. Use force_rebuild=True to recreate."
+                )
+                return
+        except:
+            pass  # Collection doesn't exist, continue with creation
+
+    print(f"Building document collection '{collection_name}'...")
+
+    # Process documents
+    embeddings = OpenAIEmbeddings(model=embedding_model)
+    chapters = read_and_split_document_by_chapter(file_path)
+    paragraphs = read_and_split_document_by_paragraph(chapters)
+
+    # Create Chroma vector store
+    VECTOR_STORE_DIR.mkdir(exist_ok=True, parents=True)
+    vector_store = Chroma.from_documents(
+        documents=paragraphs,
+        embedding=embeddings,
+        collection_name=collection_name,
+        persist_directory=persist_directory,
+    )
+
+    print(f"Document collection saved to {persist_directory}")
+    print(f"Total documents: {len(paragraphs)}")
+
+
+def load_rental_law_retriever(
+    collection_name: str = COLLECTION_NAME,
+    embedding_model: str = EMBEDDING_MODEL,
+    k: int = 5,
+    force_rebuild: bool = False,
+) -> VectorStoreRetriever:
+    """Load an existing document collection"""
+
+    persist_directory = str(VECTOR_STORE_DIR)  # Same as build function
+
+    if force_rebuild:
+        print(f"Force rebuilding collection '{collection_name}'...")
+        build_rental_law_collection(force_rebuild=True)
+
+    try:
+        print(f"Loading document collection '{collection_name}'...")
+        embeddings = OpenAIEmbeddings(model=embedding_model)
+
+        # Use Chroma constructor, not load_local
+        vector_store = Chroma(
+            collection_name=collection_name,
+            embedding_function=embeddings,
+            persist_directory=persist_directory,
+        )
+
+        # Check if collection has documents
+        if vector_store._collection.count() == 0:
+            raise ValueError("Collection is empty")
+
+    except Exception as e:
+        print(f"Collection '{collection_name}' not found. Building it now...")
+        build_rental_law_collection()
+
+        # Load the newly created collection
+        embeddings = OpenAIEmbeddings(model=embedding_model)
+        vector_store = Chroma(
+            collection_name=collection_name,
+            embedding_function=embeddings,
+            persist_directory=persist_directory,
+        )
+
+    return vector_store.as_retriever(search_type="similarity", search_kwargs={"k": k})

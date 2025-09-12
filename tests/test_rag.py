@@ -38,7 +38,6 @@ def mock_embeddings():
     return mock_embeddings
 
 
-
 def test_rag_chain():
     rag_chain = RAGChain()
 
