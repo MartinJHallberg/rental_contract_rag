@@ -1,119 +1,16 @@
 from langchain_core.runnables import RunnablePassthrough
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.vectorstores import VectorStoreRetriever
-from langchain_chroma import Chroma
 from langchain_core.language_models import BaseLanguageModel
-from langchain_core.prompts import BasePromptTemplate
+from langchain_core.prompts import BasePromptTemplate, ChatPromptTemplate
 from langchain_openai import ChatOpenAI
-from langchain_openai.embeddings import OpenAIEmbeddings
 from contract_loader import ContractInfo
-from data_loading import (
-    read_and_split_document_by_chapter,
-    read_and_split_document_by_paragraph,
-)
 from langchain import hub
+from config import LLM_MODEL, LLM_TEMPERATURE
+from data_loading import load_rental_law_retriever
+from pydantic import BaseModel, Field
+from langchain_core.output_parsers import PydanticOutputParser
 
-from pathlib import Path
-
-# Import configuration (this automatically sets up LangSmith)
-from config import (
-    VECTOR_STORE_DIR,
-    EMBEDDING_MODEL,
-    COLLECTION_NAME,
-    LLM_MODEL,
-    LLM_TEMPERATURE,
-)
-
-
-def build_rental_law_collection(
-    file_path: str = "src/data/lejeloven_2025.pdf",
-    collection_name: str = COLLECTION_NAME,
-    embedding_model: str = EMBEDDING_MODEL,
-    force_rebuild: bool = False,
-):
-    """Build a persistent document collection using Chroma"""
-
-    persist_directory = str(VECTOR_STORE_DIR)
-
-    # Check if collection exists
-    if not force_rebuild:
-        try:
-            embeddings = OpenAIEmbeddings(model=embedding_model)
-            existing_db = Chroma(
-                collection_name=collection_name,
-                embedding_function=embeddings,
-                persist_directory=persist_directory,
-            )
-            if existing_db._collection.count() > 0:
-                print(
-                    f"Collection '{collection_name}' already exists. Use force_rebuild=True to recreate."
-                )
-                return
-        except:
-            pass  # Collection doesn't exist, continue with creation
-
-    print(f"Building document collection '{collection_name}'...")
-
-    # Process documents
-    embeddings = OpenAIEmbeddings(model=embedding_model)
-    chapters = read_and_split_document_by_chapter(file_path)
-    paragraphs = read_and_split_document_by_paragraph(chapters)
-
-    # Create Chroma vector store
-    VECTOR_STORE_DIR.mkdir(exist_ok=True, parents=True)
-    vector_store = Chroma.from_documents(
-        documents=paragraphs,
-        embedding=embeddings,
-        collection_name=collection_name,
-        persist_directory=persist_directory,
-    )
-
-    print(f"Document collection saved to {persist_directory}")
-    print(f"Total documents: {len(paragraphs)}")
-
-
-def load_rental_law_retriever(
-    collection_name: str = COLLECTION_NAME,
-    embedding_model: str = EMBEDDING_MODEL,
-    k: int = 5,
-    force_rebuild: bool = False,
-) -> VectorStoreRetriever:
-    """Load an existing document collection"""
-
-    persist_directory = str(VECTOR_STORE_DIR)  # Same as build function
-
-    if force_rebuild:
-        print(f"Force rebuilding collection '{collection_name}'...")
-        build_rental_law_collection(force_rebuild=True)
-
-    try:
-        print(f"Loading document collection '{collection_name}'...")
-        embeddings = OpenAIEmbeddings(model=embedding_model)
-
-        # Use Chroma constructor, not load_local
-        vector_store = Chroma(
-            collection_name=collection_name,
-            embedding_function=embeddings,
-            persist_directory=persist_directory,
-        )
-
-        # Check if collection has documents
-        if vector_store._collection.count() == 0:
-            raise ValueError("Collection is empty")
-
-    except Exception as e:
-        print(f"Collection '{collection_name}' not found. Building it now...")
-        build_rental_law_collection()
-
-        # Load the newly created collection
-        embeddings = OpenAIEmbeddings(model=embedding_model)
-        vector_store = Chroma(
-            collection_name=collection_name,
-            embedding_function=embeddings,
-            persist_directory=persist_directory,
-        )
-
-    return vector_store.as_retriever(search_type="similarity", search_kwargs={"k": k})
 
 
 def format_docs(docs):
@@ -121,18 +18,62 @@ def format_docs(docs):
     return "\n\n".join(doc.page_content for doc in docs)
 
 
+class LLMOutput(BaseModel):
+    """Output schema for LLM answers with integrated prompt"""
+    should_be_checked: bool = Field(description="Whether the issue should be checked further")
+    description: str = Field(description="Description of the issue")
+    references: dict[str, str] = Field(description="Reference to paragraph and page number", default_factory=dict)
+    
+    @classmethod
+    def get_parser(cls) -> PydanticOutputParser:
+        """Get the output parser for this model"""
+        return PydanticOutputParser(pydantic_object=cls)
+    
+    @classmethod
+    def get_prompt(cls) -> ChatPromptTemplate:
+        """Get the prompt template for this output format"""
+        parser = cls.get_parser()
+        
+        template = """You are a legal expert on Danish rental law. Based on the provided context, analyze the question and provide a structured response.
+
+Context: {context}
+
+Question: {question}
+
+{format_instructions}
+
+Important guidelines:
+- Set should_be_checked to true if the issue does not comply with Danish rental law or if you are unsure
+- Set should_be_checked to false if the answer is clearly legal and compliant with Danish rental law
+- Provide concise and relevant descriptions of the information you have retrieved and why the contract information complies or does not comply with the law
+- Include references to specific paragraphs and page numbers from the context in the references field in the format {{"paragraph": "page number"}}
+"""
+        
+        return ChatPromptTemplate.from_template(
+            template,
+            partial_variables={"format_instructions": parser.get_format_instructions()}
+        )
+
+
 class RAGChain:
     """Simple RAG chain for asking questions about rental law"""
-
+    
     def __init__(
         self,
-        prompt: BasePromptTemplate = None,
         retriever: VectorStoreRetriever = None,
         llm: BaseLanguageModel = None,
+        llm_output: LLMOutput = None
     ):
         self.retriever = retriever or load_rental_law_retriever()
         self.llm = llm or ChatOpenAI(model=LLM_MODEL, temperature=LLM_TEMPERATURE)
-        self.prompt = prompt or hub.pull("rlm/rag-prompt")
+        
+        if llm_output is None:
+            self.output_parser = LLMOutput.get_parser()
+            self.prompt = LLMOutput.get_prompt()
+        else:
+            self.output_parser = llm_output.get_parser()
+            self.prompt = llm_output.get_prompt()
+            
         self._chain = self._build_chain()
 
     def _build_chain(self):
@@ -144,30 +85,99 @@ class RAGChain:
             }
             | self.prompt
             | self.llm
-            | StrOutputParser()
+            | self.output_parser
         )
 
-    def ask(self, question: str) -> str:
+    def ask(self, question: str) -> LLMOutput | str:
         """Ask a question and get an answer"""
         return self._chain.invoke(question)
 
 
-# Contract validation functions
-def validate_deposit_amount(rag_chain: RAGChain, contract_info: ContractInfo) -> str:
+# Contract validation functions - pass specific attributes only
+def validate_deposit_amount(
+    rag_chain: RAGChain, 
+    deposit_amount: str, 
+    monthly_rental_amount: str
+) -> LLMOutput:
     """Check if deposit amount is legal"""
-    question = f"Is a deposit of {contract_info.deposit_amount} legal for a rental property with monthly rent of {contract_info.monthly_rental_amount}?"
+    question = f"Is a deposit of {deposit_amount} legal for a rental property with monthly rent of {monthly_rental_amount}?"
     return rag_chain.ask(question)
 
 
 def validate_termination_conditions(
-    rag_chain: RAGChain, contract_info: ContractInfo
-) -> str:
+    rag_chain: RAGChain, 
+    termination_conditions: str
+) -> LLMOutput:
     """Check if termination conditions are legal"""
-    question = f"Are these termination conditions legal: {contract_info.termination_conditions}?"
+    question = f"Are these termination conditions legal: {termination_conditions}?"
     return rag_chain.ask(question)
 
 
-def validate_price_adjustments(rag_chain: RAGChain, contract_info: ContractInfo) -> str:
+def validate_price_adjustments(
+    rag_chain: RAGChain, 
+    price_adjustments: str
+) -> LLMOutput:
     """Check if price adjustment conditions are legal"""
-    question = f"Are these price adjustment conditions legal: {contract_info.price_adjustments}?"
+    question = f"Are these price adjustment conditions legal: {price_adjustments}?"
     return rag_chain.ask(question)
+
+
+def validate_lease_duration(
+    rag_chain: RAGChain, 
+    lease_duration: str, 
+    rental_type: str = "residential"
+) -> LLMOutput:
+    """Check if lease duration is legal"""
+    question = f"Is a lease duration of {lease_duration} legal for a {rental_type} property?"
+    return rag_chain.ask(question)
+
+
+def validate_utilities_responsibility(
+    rag_chain: RAGChain, 
+    utilities: dict[str, str]
+) -> LLMOutput:
+    """Check if utility responsibility distribution is legal"""
+    utilities_str = ", ".join([f"{util}: {resp}" for util, resp in utilities.items()])
+    question = f"Are these utility responsibilities legal: {utilities_str}?"
+    return rag_chain.ask(question)
+
+
+def validate_contract(rag_chain: RAGChain, contract_info: ContractInfo) -> dict[str, LLMOutput]:
+    """Validate all aspects of a contract - convenience function"""
+    
+    results = {}
+    
+    # Validate deposit
+    results['deposit'] = validate_deposit_amount(
+        rag_chain, 
+        contract_info.deposit_amount, 
+        contract_info.monthly_rental_amount
+    )
+    
+    # Validate termination conditions
+    results['termination'] = validate_termination_conditions(
+        rag_chain, 
+        contract_info.termination_conditions
+    )
+    
+    # Validate price adjustments
+    results['price_adjustments'] = validate_price_adjustments(
+        rag_chain, 
+        contract_info.price_adjustments
+    )
+    
+    # Validate lease duration
+    results['lease_duration'] = validate_lease_duration(
+        rag_chain, 
+        contract_info.lease_duration, 
+        contract_info.rental_type
+    )
+    
+    # Validate utilities (if applicable)
+    if contract_info.utilities:
+        results['utilities'] = validate_utilities_responsibility(
+            rag_chain, 
+            contract_info.utilities
+        )
+    
+    return results

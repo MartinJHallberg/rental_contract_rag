@@ -1,12 +1,8 @@
 import pytest
 from unittest.mock import Mock, patch
 from langchain.schema import Document
-from langchain_core.vectorstores import InMemoryVectorStore
 from langchain_openai import OpenAIEmbeddings
-from langchain.prompts import ChatPromptTemplate
-from langchain.chat_models import ChatOpenAI
-from rag import RAGChain, validate_deposit_amount
-from contract_loader import load_contract_and_extract_info
+from rag import RAGChain, validate_deposit_amount, LLMOutput
 
 
 @pytest.fixture
@@ -38,7 +34,10 @@ def mock_embeddings():
     return mock_embeddings
 
 
+@pytest.mark.api_call
 def test_rag_chain():
     rag_chain = RAGChain()
 
-    deposit_answer = validate_deposit_amount(rag_chain, extracted_contract_info)
+    deposit_answer = validate_deposit_amount(rag_chain, deposit_amount="50000 DKK", monthly_rental_amount="4000 DKK")
+    assert isinstance(deposit_answer, LLMOutput)
+    assert deposit_answer.should_be_checked is True
