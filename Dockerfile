@@ -4,42 +4,40 @@ FROM python:3.12-slim
 # Set working directory
 WORKDIR /app
 
-# Install system dependencies for PDF processing
-RUN apt-get update && apt-get install -y \
+# Install system dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
     tesseract-ocr \
     poppler-utils \
     libgl1-mesa-glx \
     libglib2.0-0 \
-    libsm6 \
-    libxext6 \
-    libxrender-dev \
-    libgomp1 \
+    curl \
+    && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy dependency files
-COPY pyproject.toml .
-COPY poetry.lock* .
-
-# Install Poetry and dependencies
+# Install Poetry
 RUN pip install --no-cache-dir poetry
-RUN poetry config virtualenvs.create false
-RUN poetry install --no-dev
+
+# Copy dependency files
+COPY pyproject.toml poetry.lock* ./
+
+# Configure Poetry and install ONLY production dependencies
+RUN poetry config virtualenvs.create false \
+    && poetry install --only=main --no-interaction --no-ansi
 
 # Copy application code
 COPY src/ ./src/
-COPY tests/ ./tests/
 COPY .env.example .env
 
-# Create necessary directories
-RUN mkdir -p src/data/cache src/data/vector_stores src/data/uploads
+# Create directories
+RUN mkdir -p src/data/{cache,vector_stores,uploads}
+
+# Environment variables
+ENV PYTHONPATH=/app/src \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
 
 # Expose port
 EXPOSE 8050
-
-# Set environment variables
-ENV PYTHONPATH=/app/src
-ENV DASH_HOST=0.0.0.0
-ENV DASH_PORT=8050
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \

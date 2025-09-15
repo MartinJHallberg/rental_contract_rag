@@ -3,6 +3,7 @@ version: '3.8'
 services:
   rental-contract-rag:
     build: .
+    image: rental-contract-rag:latest  # Add this line
     ports:
       - "8050:8050"
     environment:
