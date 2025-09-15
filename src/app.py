@@ -441,9 +441,7 @@ def validate_contract(n_clicks, contents, filename):
         contract_info = load_contract_and_extract_info(cached_file_path)
 
         # Perform validations
-        deposit_result = rag_chain.va
-        
-        validate_deposit_amount(
+        deposit_result=validate_deposit_amount(
             rag_chain, contract_info.deposit_amount, contract_info.monthly_rental_amount
         )
 

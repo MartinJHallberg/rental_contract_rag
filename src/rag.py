@@ -8,6 +8,7 @@ from config import LLM_MODEL, LLM_TEMPERATURE
 from data_loading import load_rental_law_retriever
 from pydantic import BaseModel, Field
 from langchain_core.output_parsers import PydanticOutputParser
+import inspect
 
 
 def format_docs(docs):
@@ -55,6 +56,7 @@ Important guidelines:
             template,
             partial_variables={"format_instructions": parser.get_format_instructions()},
         )
+    
 
 
 class RAGChain:
@@ -95,7 +97,6 @@ class RAGChain:
         return self._chain.invoke(question)
 
 
-# Contract validation functions - pass specific attributes only
 def validate_deposit_amount(
     rag_chain: RAGChain, deposit_amount: str, monthly_rental_amount: str
 ) -> LLMOutput:
@@ -118,58 +119,3 @@ def validate_price_adjustments(
     """Check if price adjustment conditions are legal"""
     question = f"Are these price adjustment conditions legal: {price_adjustments}?"
     return rag_chain.ask(question)
-
-
-def validate_lease_duration(
-    rag_chain: RAGChain, lease_duration: str, rental_type: str = "residential"
-) -> LLMOutput:
-    """Check if lease duration is legal"""
-    question = (
-        f"Is a lease duration of {lease_duration} legal for a {rental_type} property?"
-    )
-    return rag_chain.ask(question)
-
-
-def validate_utilities_responsibility(
-    rag_chain: RAGChain, utilities: dict[str, str]
-) -> LLMOutput:
-    """Check if utility responsibility distribution is legal"""
-    utilities_str = ", ".join([f"{util}: {resp}" for util, resp in utilities.items()])
-    question = f"Are these utility responsibilities legal: {utilities_str}?"
-    return rag_chain.ask(question)
-
-
-def validate_contract(
-    rag_chain: RAGChain, contract_info: ContractInfo
-) -> dict[str, LLMOutput]:
-    """Validate all aspects of a contract - convenience function"""
-
-    results = {}
-
-    # Validate deposit
-    results["deposit"] = validate_deposit_amount(
-        rag_chain, contract_info.deposit_amount, contract_info.monthly_rental_amount
-    )
-
-    # Validate termination conditions
-    results["termination"] = validate_termination_conditions(
-        rag_chain, contract_info.termination_conditions
-    )
-
-    # Validate price adjustments
-    results["price_adjustments"] = validate_price_adjustments(
-        rag_chain, contract_info.price_adjustments
-    )
-
-    # Validate lease duration
-    results["lease_duration"] = validate_lease_duration(
-        rag_chain, contract_info.lease_duration, contract_info.rental_type
-    )
-
-    # Validate utilities (if applicable)
-    if contract_info.utilities:
-        results["utilities"] = validate_utilities_responsibility(
-            rag_chain, contract_info.utilities
-        )
-
-    return results
