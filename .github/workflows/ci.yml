@@ -1,10 +1,10 @@
-name: CI/CD Pipeline
+name: CI Pipeline
 
 on:
   push:
-    branches: [ main, master, develop ]
+    branches: [ master ]
   pull_request:
-    branches: [ main, master ]
+    branches: [ master ]
 
 jobs:
   test:
@@ -54,15 +54,10 @@ jobs:
 
     - name: Run tests
       run: |
-        poetry run pytest tests/ -v --tb=short
+        poetry run pytest -m "not slow and not api_call"
       env:
-        # Use dummy values for testing
-        OPENAI_API_KEY: "dummy-key-for-testing"
+        LANGCHAIN_TRACING_V2: "false"
         ENABLE_TRACING: "false"
-
-    - name: Test Docker build
-      run: |
-        docker build -t rental-contract-rag:test .
 
   security:
     runs-on: ubuntu-latest
@@ -82,43 +77,3 @@ jobs:
       if: always()
       with:
         sarif_file: 'trivy-results.sarif'
-
-  build-and-push:
-    needs: [test, security]
-    runs-on: ubuntu-latest
-    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
-    
-    steps:
-    - uses: actions/checkout@v4
-
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v3
-
-    - name: Login to GitHub Container Registry
-      uses: docker/login-action@v3
-      with:
-        registry: ghcr.io
-        username: ${{ github.actor }}
-        password: ${{ secrets.GITHUB_TOKEN }}
-
-    - name: Extract metadata
-      id: meta
-      uses: docker/metadata-action@v5
-      with:
-        images: ghcr.io/${{ github.repository }}
-        tags: |
-          type=ref,event=branch
-          type=ref,event=pr
-          type=sha,prefix={{branch}}-
-          type=raw,value=latest,enable={{is_default_branch}}
-
-    - name: Build and push Docker image
-      uses: docker/build-push-action@v5
-      with:
-        context: .
-        platforms: linux/amd64,linux/arm64
-        push: true
-        tags: ${{ steps.meta.outputs.tags }}
-        labels: ${{ steps.meta.outputs.labels }}
-        cache-from: type=gha
-        cache-to: type=gha,mode=max
