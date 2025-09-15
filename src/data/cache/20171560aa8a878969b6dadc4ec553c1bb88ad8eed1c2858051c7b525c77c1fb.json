@@ -1,0 +1,26 @@
+{
+  "landlord": "Martin Hallberg",
+  "tenant": "Martin Hallberg",
+  "monthly_rental_amount": "3000 kr.",
+  "payment_terms": "Lejen m.v. forfalder til betaling den 1. i hver måned.",
+  "rental_type": "Fremlejeforhold",
+  "property_address": "Nerrebro, København, EnEllerAndenGade 2, 3 TV",
+  "lease_start_date": "2025-11-01",
+  "lease_duration": "Indtil det opsiges.",
+  "termination_conditions": "Lejeren kan opsige med 3 måneders varsel til den første hverdag i en måned, udlejeren kan opsige efter §§ 170 og 171 i lov om leje.",
+  "price_adjustments": "Lejen reguleres én gang årligt efter udviklingen i Danmarks Statistiks nettoprisindeks.",
+  "deposit_amount": "9000 kr.",
+  "prepaid_rent": "9000 kr.",
+  "amenities": "Cykelparkering, fællesvaskeri.",
+  "utilities": {
+    "heating": "Fjernvarme/naturgas",
+    "water": "Udgiften til vand fordeles på grundlag af individuelle forbrugsmålere.",
+    "electricity": "Udgiften til el fordeles ikke på grundlag af individuelle forbrugsmålere og indeholdes i lejen.",
+    "internet": "Lejeren leverer adgang til internet."
+  },
+  "renters_responsibilities": {
+    "indvendig_vedligeholdelse": "Lejeren har pligt til at vedligeholde låse og nøgler.",
+    "udvendig_vedligeholdelse": "Udlejeren har pligt til at holde ejendommen og det lejede forsvarligt ved lige.",
+    "reparationspligt": "Lejeren skal sørge for vedligeholdelse af låse og nøgler."
+  }
+}
