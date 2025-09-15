@@ -6,9 +6,11 @@ import base64
 import io
 import tempfile
 import os
+import hashlib
 from pathlib import Path
 
 # Import your existing modules
+from config import CACHE_DIR
 from contract_loader import load_contract_and_extract_info, ContractInfo
 from rag import RAGChain, validate_deposit_amount, validate_termination_conditions, validate_price_adjustments
 
@@ -17,6 +19,48 @@ app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 
 # Initialize RAG chain
 rag_chain = RAGChain()
+
+# Create cache directory for uploaded files
+CACHE_DIR = Path()
+CACHE_DIR.mkdir(exist_ok=True, parents=True)
+
+
+def get_cached_file_path(filename, file_content):
+    """Generate a cached file path based on filename and content hash"""
+
+    
+    # Create hash of file content for uniqueness
+    content_hash = hashlib.md5(file_content).hexdigest()[:8]
+    
+    # Clean filename (remove special characters, keep extension)
+    clean_filename = "".join(c for c in filename if c.isalnum() or c in ".-_")
+    name_without_ext = Path(clean_filename).stem
+    ext = Path(clean_filename).suffix
+    
+    # Create cached filename: originalname_hash.pdf
+    cached_filename = f"{name_without_ext}_{content_hash}{ext}"
+    return CACHE_DIR / cached_filename
+
+
+def save_uploaded_file(contents, filename):
+    """Save uploaded file to cache directory, return path to cached file"""
+    # Decode the uploaded file
+    content_type, content_string = contents.split(',')
+    decoded = base64.b64decode(content_string)
+    
+    # Get cached file path
+    cached_file_path = get_cached_file_path(filename, decoded)
+    
+    # If file doesn't exist in cache, save it
+    #if not cached_file_path.exists():
+    #    with open(cached_file_path, 'wb') as f:
+    #        f.write(decoded)
+    #    print(f"📁 Saved new file to cache: {cached_file_path.name}")
+    #else:
+    #    print(f"📁 Using cached file: {cached_file_path.name}")
+    
+    return str(cached_file_path)
+
 
 # App layout
 app.layout = dbc.Container([
@@ -143,8 +187,18 @@ def update_upload_status(contents, filename):
         return "", True
     
     if filename and filename.endswith('.pdf'):
+        # Check if file is cached
+        content_type, content_string = contents.split(',')
+        decoded = base64.b64decode(content_string)
+        cached_file_path = get_cached_file_path(filename, decoded)
+        
+        if cached_file_path.exists():
+            cache_status = " (cached)"
+        else:
+            cache_status = " (new)"
+            
         return dbc.Alert(
-            f"✅ File uploaded: {filename}", 
+            f"✅ File uploaded: {filename}{cache_status}", 
             color="success", 
             dismissable=True
         ), False
@@ -170,91 +224,80 @@ def validate_contract(n_clicks, contents, filename):
         raise PreventUpdate
     
     try:
-        # Decode the uploaded file
-        content_type, content_string = contents.split(',')
-        decoded = base64.b64decode(content_string)
+        # Save file to cache and get path
+        cached_file_path  = save_uploaded_file(contents, filename)
         
-        # Save to temporary file
-        with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as tmp_file:
-            tmp_file.write(decoded)
-            tmp_file_path = tmp_file.name
+        # Extract contract information (this will use caching from contract_loader)
+        contract_info = load_contract_and_extract_info(cached_file_path)
         
-        try:
-            # Extract contract information
-            contract_info = load_contract_and_extract_info(tmp_file_path)
-            
-            # Perform validations
-            deposit_result = validate_deposit_amount(
-                rag_chain, 
-                contract_info.deposit_amount, 
-                contract_info.monthly_rental_amount
-            )
-            
-            termination_result = validate_termination_conditions(
-                rag_chain, 
-                contract_info.termination_conditions
-            )
-            
-            price_adjustment_result = validate_price_adjustments(
-                rag_chain, 
-                contract_info.price_adjustments
-            )
-            
-            # Create result cards
-            results = dbc.Row([
-                dbc.Col([
-                    html.H3("Validation Results", className="mb-4"),
-                    
-                    create_validation_card(
-                        "Deposit Amount Validation", 
-                        deposit_result
-                    ),
-                    
-                    create_validation_card(
-                        "Termination Conditions Validation", 
-                        termination_result
-                    ),
-                    
-                    create_validation_card(
-                        "Price Adjustment Validation", 
-                        price_adjustment_result
-                    ),
-                    
-                    # Contract summary
-                    dbc.Card([
-                        dbc.CardHeader([
-                            html.H5("📋 Contract Summary", className="mb-0")
-                        ]),
-                        dbc.CardBody([
-                            dbc.Row([
-                                dbc.Col([
-                                    html.Strong("Landlord: "), contract_info.landlord,
-                                    html.Br(),
-                                    html.Strong("Tenant: "), contract_info.tenant,
-                                    html.Br(),
-                                    html.Strong("Property: "), contract_info.property_address,
-                                    html.Br(),
-                                    html.Strong("Monthly Rent: "), contract_info.monthly_rental_amount,
-                                ], md=6),
-                                dbc.Col([
-                                    html.Strong("Deposit: "), contract_info.deposit_amount,
-                                    html.Br(),
-                                    html.Strong("Lease Duration: "), contract_info.lease_duration,
-                                    html.Br(),
-                                    html.Strong("Rental Type: "), contract_info.rental_type,
-                                    html.Br(),
-                                    html.Strong("Start Date: "), contract_info.lease_start_date,
-                                ], md=6)
-                            ])
+        # Perform validations
+        deposit_result = validate_deposit_amount(
+            rag_chain, 
+            contract_info.deposit_amount, 
+            contract_info.monthly_rental_amount
+        )
+        
+        termination_result = validate_termination_conditions(
+            rag_chain, 
+            contract_info.termination_conditions
+        )
+        
+        price_adjustment_result = validate_price_adjustments(
+            rag_chain, 
+            contract_info.price_adjustments
+        )
+        
+        # Create result cards
+        results = dbc.Row([
+            dbc.Col([
+                html.H3("Validation Results", className="mb-4"),
+                
+                create_validation_card(
+                    "Deposit Amount Validation", 
+                    deposit_result
+                ),
+                
+                create_validation_card(
+                    "Termination Conditions Validation", 
+                    termination_result
+                ),
+                
+                create_validation_card(
+                    "Price Adjustment Validation", 
+                    price_adjustment_result
+                ),
+                
+                # Contract summary
+                dbc.Card([
+                    dbc.CardHeader([
+                        html.H5("📋 Contract Summary", className="mb-0")
+                    ]),
+                    dbc.CardBody([
+                        dbc.Row([
+                            dbc.Col([
+                                html.Strong("Landlord: "), contract_info.landlord,
+                                html.Br(),
+                                html.Strong("Tenant: "), contract_info.tenant,
+                                html.Br(),
+                                html.Strong("Property: "), contract_info.property_address,
+                                html.Br(),
+                                html.Strong("Monthly Rent: "), contract_info.monthly_rental_amount,
+                            ], md=6),
+                            dbc.Col([
+                                html.Strong("Deposit: "), contract_info.deposit_amount,
+                                html.Br(),
+                                html.Strong("Lease Duration: "), contract_info.lease_duration,
+                                html.Br(),
+                                html.Strong("Rental Type: "), contract_info.rental_type,
+                                html.Br(),
+                                html.Strong("Start Date: "), contract_info.lease_start_date,
+                            ], md=6)
                         ])
-                    ], className="mb-3")
-                    
-                ], width=12)
-            ])
-            
-        finally:
-            # Clean up temporary file
-            os.unlink(tmp_file_path)
+                    ])
+                ], className="mb-3")
+                
+            ], width=12)
+        ])
         
         return results, ""
         
@@ -270,4 +313,4 @@ def validate_contract(n_clicks, contents, filename):
 
 
 if __name__ == '__main__':
-    app.run_server(debug=True, port=8050)
+    app.run(debug=True, port=8050)
