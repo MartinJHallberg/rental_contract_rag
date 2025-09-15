@@ -494,7 +494,7 @@ def validate_contract(n_clicks, contents, filename):
 if __name__ == "__main__":
     # Get configuration from environment variables
     debug_mode = os.getenv("DEBUG_MODE", "false").lower() == "true"
-    host = os.getenv("DASH_HOST", "127.0.0.1")
+    host = os.getenv("DASH_HOST", "0.0.0.0")
     port = int(os.getenv("DASH_PORT", "8050"))
     
     app.run(debug=debug_mode, host=host, port=port)

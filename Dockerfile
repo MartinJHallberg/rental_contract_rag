@@ -33,7 +33,9 @@ RUN mkdir -p src/data/{cache,vector_stores,uploads}
 # Environment variables
 ENV PYTHONPATH=/app/src \
     PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1
+    PYTHONUNBUFFERED=1 \
+    DASH_HOST=0.0.0.0 \
+    DASH_PORT=8050
 
 # Expose port
 EXPOSE 8050
