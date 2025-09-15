@@ -1,0 +1,26 @@
+{
+  "landlord": "Martin Hallberg",
+  "tenant": "Martin Hallberg",
+  "monthly_rental_amount": "3000 kr",
+  "payment_terms": "Lejen forfalder til betaling den 1. i hver måned.",
+  "rental_type": "Fremlejeforhold",
+  "property_address": "Nerrebro, København",
+  "lease_start_date": "2025-11-01",
+  "lease_duration": "Indtil opsigelse, medmindre lejemålet er tidsbegrænset.",
+  "termination_conditions": "Opsigelse skal være skriftlig fra begge parters side. Lejeren kan opsige med 3 måneders varsel.",
+  "price_adjustments": "Lejen reguleres én gang årligt efter udviklingen i Danmarks Statistiks nettoprisindeks.",
+  "deposit_amount": "9000 kr",
+  "prepaid_rent": "9000 kr",
+  "amenities": "Cykelparkering, fælles vaskeri",
+  "utilities": {
+    "heating": "A conto varmebidrag 200 kr",
+    "water": "A conto vandbidrag 100 kr",
+    "electricity": "A conto elbidrag kr. (ikke specificeret)",
+    "internet": "Internetbidrag kr. (ikke specificeret)"
+  },
+  "renters_responsibilities": {
+    "indvendig_vedligeholdelse": "Lejeren har pligt til indvendig vedligeholdelse, medmindre andet er aftalt.",
+    "udvendig_vedligeholdelse": "Udlejeren har pligt til udvendig vedligeholdelse, medmindre andet er aftalt.",
+    "lås_og_nøgler": "Lejeren skal vedligeholde låse og nøgler."
+  }
+}
