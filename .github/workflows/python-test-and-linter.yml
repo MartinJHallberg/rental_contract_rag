@@ -27,6 +27,9 @@ jobs:
       run: |
         poetry install
     - name: Run tests
+      env:
+        LANGCHAIN_TRACING_V2: "false"
+        ENABLE_TRACING: "false"
       run: |
         poetry run pytest -m "not slow and not api_call"
     - name: Lint with Ruff
