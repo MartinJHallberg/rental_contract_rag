@@ -46,8 +46,66 @@ def get_cached_file_path(contents, filename):
     return str(cached_file_path)
 
 
-# App layout
+def create_placeholder_card(title, icon="📋"):
+    """Create a placeholder validation card"""
+    return dbc.Card([
+        dbc.CardHeader([
+            html.H5([
+                icon + " " + title,
+                dbc.Badge("Waiting for validation", color="secondary", className="ms-2")
+            ], className="mb-0")
+        ]),
+        dbc.CardBody([
+            html.P("Upload and validate a contract to see results here.", 
+                   className="card-text text-muted"),
+            html.Small("References will appear here when available.", 
+                      className="text-muted")
+        ])
+    ], color="light", outline=True, className="mb-3")
+
+
+def create_contract_summary_placeholder():
+    """Create placeholder contract summary card"""
+    return dbc.Card([
+        dbc.CardHeader([
+            html.H5("📋 Contract Summary", className="mb-0")
+        ]),
+        dbc.CardBody([
+            dbc.Row([
+                dbc.Col([
+                    html.Strong("Landlord: "), 
+                    html.Span("Waiting for data...", className="text-muted"),
+                    html.Br(),
+                    html.Strong("Tenant: "), 
+                    html.Span("Waiting for data...", className="text-muted"),
+                    html.Br(),
+                    html.Strong("Property: "), 
+                    html.Span("Waiting for data...", className="text-muted"),
+                    html.Br(),
+                    html.Strong("Monthly Rent: "), 
+                    html.Span("Waiting for data...", className="text-muted"),
+                ], md=6),
+                dbc.Col([
+                    html.Strong("Deposit: "), 
+                    html.Span("Waiting for data...", className="text-muted"),
+                    html.Br(),
+                    html.Strong("Lease Duration: "), 
+                    html.Span("Waiting for data...", className="text-muted"),
+                    html.Br(),
+                    html.Strong("Rental Type: "), 
+                    html.Span("Waiting for data...", className="text-muted"),
+                    html.Br(),
+                    html.Strong("Start Date: "), 
+                    html.Span("Waiting for data...", className="text-muted"),
+                ], md=6)
+            ])
+        ])
+    ], className="mb-3")
+
+
+# Updated app layout with left/right split
 app.layout = dbc.Container([
+    # Header
     dbc.Row([
         dbc.Col([
             html.H1("Rental Contract Validator", className="text-center mb-4"),
@@ -56,7 +114,9 @@ app.layout = dbc.Container([
         ])
     ]),
     
+    # Main content - split layout
     dbc.Row([
+        # Left side - File upload
         dbc.Col([
             dbc.Card([
                 dbc.CardBody([
@@ -69,13 +129,14 @@ app.layout = dbc.Container([
                         ]),
                         style={
                             'width': '100%',
-                            'height': '60px',
-                            'lineHeight': '60px',
-                            'borderWidth': '1px',
+                            'height': '100px',
+                            'lineHeight': '100px',
+                            'borderWidth': '2px',
                             'borderStyle': 'dashed',
-                            'borderRadius': '5px',
+                            'borderRadius': '10px',
                             'textAlign': 'center',
-                            'margin': '10px'
+                            'margin': '10px 0',
+                            'backgroundColor': '#f8f9fa'
                         },
                         multiple=False,
                         accept='.pdf'
@@ -85,27 +146,45 @@ app.layout = dbc.Container([
                         "Validate Contract", 
                         id="validate-button", 
                         color="primary", 
-                        className="mt-3",
+                        size="lg",
+                        className="mt-3 w-100",
                         disabled=True
                     )
                 ])
             ])
-        ], width=12)
-    ], className="mb-4"),
-    
-    # Loading spinner
-    dbc.Row([
+        ], md=4),
+        
+        # Right side - Validation results (pre-created with placeholders)
         dbc.Col([
+            html.H4("Validation Results", className="mb-4"),
+            
+            # Loading spinner
             dcc.Loading(
                 id="loading",
                 type="default",
                 children=html.Div(id="loading-output")
-            )
-        ])
-    ]),
-    
-    # Validation results
-    html.Div(id='validation-results')
+            ),
+            
+            # Contract Summary (placeholder)
+            html.Div(id='contract-summary', children=[
+                create_contract_summary_placeholder()
+            ]),
+            
+            # Validation cards (placeholders)
+            html.Div(id='deposit-validation', children=[
+                create_placeholder_card("Deposit Amount Validation", "💰")
+            ]),
+            
+            html.Div(id='termination-validation', children=[
+                create_placeholder_card("Termination Conditions Validation", "📋")
+            ]),
+            
+            html.Div(id='price-validation', children=[
+                create_placeholder_card("Price Adjustment Validation", "💹")
+            ]),
+            
+        ], md=8)
+    ], className="mb-4"),
     
 ], fluid=True)
 
@@ -159,6 +238,37 @@ def create_validation_card(title, result, is_compliant=None):
     ], color=card_color, outline=True, className="mb-3")
 
 
+def create_contract_summary_filled(contract_info):
+    """Create filled contract summary card"""
+    return dbc.Card([
+        dbc.CardHeader([
+            html.H5("📋 Contract Summary", className="mb-0")
+        ]),
+        dbc.CardBody([
+            dbc.Row([
+                dbc.Col([
+                    html.Strong("Landlord: "), contract_info.landlord,
+                    html.Br(),
+                    html.Strong("Tenant: "), contract_info.tenant,
+                    html.Br(),
+                    html.Strong("Property: "), contract_info.property_address,
+                    html.Br(),
+                    html.Strong("Monthly Rent: "), contract_info.monthly_rental_amount,
+                ], md=6),
+                dbc.Col([
+                    html.Strong("Deposit: "), contract_info.deposit_amount,
+                    html.Br(),
+                    html.Strong("Lease Duration: "), contract_info.lease_duration,
+                    html.Br(),
+                    html.Strong("Rental Type: "), contract_info.rental_type,
+                    html.Br(),
+                    html.Strong("Start Date: "), contract_info.lease_start_date,
+                ], md=6)
+            ])
+        ])
+    ], className="mb-3")
+
+
 @callback(
     [Output('upload-status', 'children'),
      Output('validate-button', 'disabled')],
@@ -186,7 +296,10 @@ def update_upload_status(contents, filename):
 
 
 @callback(
-    [Output('validation-results', 'children'),
+    [Output('contract-summary', 'children'),
+     Output('deposit-validation', 'children'),
+     Output('termination-validation', 'children'),
+     Output('price-validation', 'children'),
      Output('loading-output', 'children')],
     [Input('validate-button', 'n_clicks')],
     [State('upload-contract', 'contents'),
@@ -194,13 +307,13 @@ def update_upload_status(contents, filename):
     prevent_initial_call=True
 )
 def validate_contract(n_clicks, contents, filename):
-    """Validate the uploaded contract"""
+    """Validate the uploaded contract and update individual cards"""
     if n_clicks is None or contents is None:
         raise PreventUpdate
     
     try:
         # Save file to cache and get path
-        cached_file_path  = get_cached_file_path(contents, filename)
+        cached_file_path = get_cached_file_path(contents, filename)
         
         # Extract contract information (this will use caching from contract_loader)
         contract_info = load_contract_and_extract_info(cached_file_path)
@@ -222,69 +335,29 @@ def validate_contract(n_clicks, contents, filename):
             contract_info.price_adjustments
         )
         
-        # Create result cards
-        results = dbc.Row([
-            dbc.Col([
-                html.H3("Validation Results", className="mb-4"),
-                
-                create_validation_card(
-                    "Deposit Amount Validation", 
-                    deposit_result
-                ),
-                
-                create_validation_card(
-                    "Termination Conditions Validation", 
-                    termination_result
-                ),
-                
-                create_validation_card(
-                    "Price Adjustment Validation", 
-                    price_adjustment_result
-                ),
-                
-                # Contract summary
-                dbc.Card([
-                    dbc.CardHeader([
-                        html.H5("📋 Contract Summary", className="mb-0")
-                    ]),
-                    dbc.CardBody([
-                        dbc.Row([
-                            dbc.Col([
-                                html.Strong("Landlord: "), contract_info.landlord,
-                                html.Br(),
-                                html.Strong("Tenant: "), contract_info.tenant,
-                                html.Br(),
-                                html.Strong("Property: "), contract_info.property_address,
-                                html.Br(),
-                                html.Strong("Monthly Rent: "), contract_info.monthly_rental_amount,
-                            ], md=6),
-                            dbc.Col([
-                                html.Strong("Deposit: "), contract_info.deposit_amount,
-                                html.Br(),
-                                html.Strong("Lease Duration: "), contract_info.lease_duration,
-                                html.Br(),
-                                html.Strong("Rental Type: "), contract_info.rental_type,
-                                html.Br(),
-                                html.Strong("Start Date: "), contract_info.lease_start_date,
-                            ], md=6)
-                        ])
-                    ])
-                ], className="mb-3")
-                
-            ], width=12)
-        ])
-        
-        return results, ""
+        # Return updated components
+        return (
+            create_contract_summary_filled(contract_info),
+            create_validation_card("Deposit Amount Validation", deposit_result),
+            create_validation_card("Termination Conditions Validation", termination_result),
+            create_validation_card("Price Adjustment Validation", price_adjustment_result),
+            ""  # Clear loading
+        )
         
     except Exception as e:
-        error_alert = dbc.Alert([
-            html.H4("❌ Validation Error", className="alert-heading"),
-            html.P(f"An error occurred while processing the contract: {str(e)}"),
-            html.Hr(),
-            html.P("Please ensure the uploaded file is a valid PDF contract.", className="mb-0")
+        error_message = f"An error occurred while processing the contract: {str(e)}"
+        error_card = dbc.Alert([
+            html.H6("❌ Validation Error", className="alert-heading"),
+            html.P(error_message),
         ], color="danger")
         
-        return error_alert, ""
+        return (
+            error_card,  # contract-summary
+            create_placeholder_card("Deposit Amount Validation", "💰"),  # deposit-validation
+            create_placeholder_card("Termination Conditions Validation", "📋"),  # termination-validation  
+            create_placeholder_card("Price Adjustment Validation", "💹"),  # price-validation
+            ""  # loading-output
+        )
 
 
 if __name__ == '__main__':
