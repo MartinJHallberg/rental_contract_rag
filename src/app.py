@@ -25,12 +25,14 @@ CACHE_DIR = Path()
 CACHE_DIR.mkdir(exist_ok=True, parents=True)
 
 
-def get_cached_file_path(filename, file_content):
+def get_cached_file_path(contents, filename):
     """Generate a cached file path based on filename and content hash"""
-
-    
+    # Decode the uploaded file
+    content_type, content_string = contents.split(',')
+    decoded = base64.b64decode(content_string)
+        
     # Create hash of file content for uniqueness
-    content_hash = hashlib.md5(file_content).hexdigest()[:8]
+    content_hash = hashlib.md5(decoded).hexdigest()[:8]
     
     # Clean filename (remove special characters, keep extension)
     clean_filename = "".join(c for c in filename if c.isalnum() or c in ".-_")
@@ -39,25 +41,7 @@ def get_cached_file_path(filename, file_content):
     
     # Create cached filename: originalname_hash.pdf
     cached_filename = f"{name_without_ext}_{content_hash}{ext}"
-    return CACHE_DIR / cached_filename
-
-
-def save_uploaded_file(contents, filename):
-    """Save uploaded file to cache directory, return path to cached file"""
-    # Decode the uploaded file
-    content_type, content_string = contents.split(',')
-    decoded = base64.b64decode(content_string)
-    
-    # Get cached file path
-    cached_file_path = get_cached_file_path(filename, decoded)
-    
-    # If file doesn't exist in cache, save it
-    #if not cached_file_path.exists():
-    #    with open(cached_file_path, 'wb') as f:
-    #        f.write(decoded)
-    #    print(f"📁 Saved new file to cache: {cached_file_path.name}")
-    #else:
-    #    print(f"📁 Using cached file: {cached_file_path.name}")
+    cached_file_path = CACHE_DIR / cached_filename
     
     return str(cached_file_path)
 
@@ -187,18 +171,9 @@ def update_upload_status(contents, filename):
         return "", True
     
     if filename and filename.endswith('.pdf'):
-        # Check if file is cached
-        content_type, content_string = contents.split(',')
-        decoded = base64.b64decode(content_string)
-        cached_file_path = get_cached_file_path(filename, decoded)
-        
-        if cached_file_path.exists():
-            cache_status = " (cached)"
-        else:
-            cache_status = " (new)"
             
         return dbc.Alert(
-            f"✅ File uploaded: {filename}{cache_status}", 
+            f"✅ File uploaded: {filename}", 
             color="success", 
             dismissable=True
         ), False
@@ -225,7 +200,7 @@ def validate_contract(n_clicks, contents, filename):
     
     try:
         # Save file to cache and get path
-        cached_file_path  = save_uploaded_file(contents, filename)
+        cached_file_path  = get_cached_file_path(contents, filename)
         
         # Extract contract information (this will use caching from contract_loader)
         contract_info = load_contract_and_extract_info(cached_file_path)
