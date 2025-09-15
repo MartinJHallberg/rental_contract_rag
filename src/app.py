@@ -438,7 +438,7 @@ def validate_contract(n_clicks, contents, filename):
         contract_info = load_contract_and_extract_info(cached_file_path)
 
         # Perform validations
-        deposit_result=validate_deposit_amount(
+        deposit_result = validate_deposit_amount(
             rag_chain, contract_info.deposit_amount, contract_info.monthly_rental_amount
         )
 
@@ -493,5 +493,5 @@ if __name__ == "__main__":
     debug_mode = os.getenv("DEBUG_MODE", "false").lower() == "true"
     host = os.getenv("DASH_HOST", "0.0.0.0")
     port = int(os.getenv("DASH_PORT", "8050"))
-    
+
     app.run(debug=debug_mode, host=host, port=port)

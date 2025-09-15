@@ -54,7 +54,6 @@ Important guidelines:
             template,
             partial_variables={"format_instructions": parser.get_format_instructions()},
         )
-    
 
 
 class RAGChain:
