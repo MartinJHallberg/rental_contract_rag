@@ -3,12 +3,10 @@ from langchain_core.vectorstores import VectorStoreRetriever
 from langchain_core.language_models import BaseLanguageModel
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_openai import ChatOpenAI
-from contract_loader import ContractInfo
 from config import LLM_MODEL, LLM_TEMPERATURE
 from data_loading import load_rental_law_retriever
 from pydantic import BaseModel, Field
 from langchain_core.output_parsers import PydanticOutputParser
-import inspect
 
 
 def format_docs(docs):

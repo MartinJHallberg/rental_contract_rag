@@ -1,5 +1,5 @@
 import pytest
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
 from langchain.schema import Document
 from langchain_openai import OpenAIEmbeddings
 from rag import RAGChain, validate_deposit_amount, LLMOutput

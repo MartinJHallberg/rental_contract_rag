@@ -4,7 +4,6 @@ Setup script for Rental Contract RAG Demo
 This script helps set up the project environment using Poetry.
 """
 
-import os
 import sys
 import subprocess
 import shutil
