@@ -1,28 +1,100 @@
-# Byte-compiled / cache
+# Environment variables and secrets
+.env
+.env.local
+.env.development
+.env.production
+*.key
+
+# Python
 __pycache__/
 *.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
 
 # Virtual environments
-.venv/
+.env
+.venv
+env/
 venv/
+ENV/
+env.bak/
+venv.bak/
+.poetry/
 
-# Distribution / packaging
-build/
-dist/
-*.egg-info/
-
-# Test / coverage
-.pytest_cache/
-.coverage
-
-# Editors / OS
+# IDEs
 .vscode/
 .idea/
+*.swp
+*.swo
+*~
+
+# OS
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
 
-# Environment variables
-.env
+# Jupyter Notebook
+.ipynb_checkpoints
 
-# Vector store directory
+# pytest
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Vector stores and cached data
 src/data/vector_stores/
+src/data/cache/
+src/data/uploads/
+*.sqlite3
+*.db
+
+# Uploaded files
+uploads/
+temp/
+tmp/
+
+# Logs
+*.log
+logs/
+
+# Docker
+docker-compose.override.yml
+
+# Model downloads and cached models
+models/
+.cache/
+
+# Large files that shouldn't be committed
+*.pdf
+*.zip
+*.tar.gz
+*.rar
+
+# Exception: Keep example/template files
+!*example*
+!*template*
+!*sample*
 

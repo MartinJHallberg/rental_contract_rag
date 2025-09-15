@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  rental-contract-rag:
+    build: .
+    image: rental-contract-rag:latest  # Add this line
+    ports:
+      - "8050:8050"
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - LANGCHAIN_API_KEY=${LANGCHAIN_API_KEY:-}
+      - LANGCHAIN_PROJECT=${LANGCHAIN_PROJECT:-rental-contract-rag}
+      - ENABLE_TRACING=${ENABLE_TRACING:-false}
+      - DEBUG_MODE=${DEBUG_MODE:-false}
+    volumes:
+      # Mount data directory to persist vector stores and cache
+      - ./src/data:/app/src/data
+      # Optional: mount custom contracts
+      - ./contracts:/app/contracts:ro
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8050/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+volumes:
+  data:
+    driver: local

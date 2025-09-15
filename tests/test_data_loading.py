@@ -1,5 +1,4 @@
 from data_loading import (
-    read_and_split_document_by_paragraph,
     split_doc_by_regex,
     CHAPTER_REGEX,
     PARAGRAPH_REGEX,
@@ -66,7 +65,6 @@ def test_extract_all_paragraphs():
     paragraphs = read_and_split_document_by_paragraph(chapters)
     paragraphs_numbers = [f"§ {i}." for i in range(1, len(paragraphs) + 1)]
     extracted_headings = [chunk.metadata["title"] for chunk in paragraphs]
-    missing_headings = set(paragraphs_numbers) - set(extracted_headings)
 
     assert paragraphs_numbers == extracted_headings
     assert len(paragraphs) == 213  # check that we have 212 paragraphs in the document

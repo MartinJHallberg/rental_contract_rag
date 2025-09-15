@@ -3,15 +3,13 @@ from dash import dcc, html, Input, Output, State, callback
 import dash_bootstrap_components as dbc
 from dash.exceptions import PreventUpdate
 import base64
-import io
-import tempfile
 import os
 import hashlib
 from pathlib import Path
 
 # Import your existing modules
 from config import CACHE_DIR
-from contract_loader import load_contract_and_extract_info, ContractInfo
+from contract_loader import load_contract_and_extract_info
 from rag import (
     RAGChain,
     validate_deposit_amount,
@@ -26,7 +24,6 @@ app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 rag_chain = RAGChain()
 
 # Create cache directory for uploaded files
-CACHE_DIR = Path()
 CACHE_DIR.mkdir(exist_ok=True, parents=True)
 
 
@@ -492,4 +489,9 @@ def validate_contract(n_clicks, contents, filename):
 
 
 if __name__ == "__main__":
-    app.run(debug=True, port=8050)
+    # Get configuration from environment variables
+    debug_mode = os.getenv("DEBUG_MODE", "false").lower() == "true"
+    host = os.getenv("DASH_HOST", "0.0.0.0")
+    port = int(os.getenv("DASH_PORT", "8050"))
+
+    app.run(debug=debug_mode, host=host, port=port)
