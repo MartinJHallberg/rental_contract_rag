@@ -1,6 +1,6 @@
 # Rental Contract RAG Checker 🏠
 
-A demo application that uses Retrieval-Augmented Generation (RAG) to analyze rental contracts against Danish Rental Law. Upload your rental contract PDF and get instant analysis for potential legal issues and violations.
+This is a demo application that uses Retrieval-Augmented Generation (RAG) to analyze rental contracts against Danish Rental Law. Upload your rental contract PDF and get instant analysis for potential legal issues and violations.
 
 ## 🚀 Features
 
@@ -8,7 +8,7 @@ A demo application that uses Retrieval-Augmented Generation (RAG) to analyze ren
 - **AI-Powered Analysis**: Uses OpenAI GPT models with RAG to analyze contracts
 - **Legal Compliance Check**: Compares contracts against Danish Rental Act (Lejeloven)
 - **Interactive Web Interface**: Clean, responsive web app built with Dash
-- **Detailed Reports**: Get comprehensive analysis of deposit amounts, termination conditions, and price adjustments
+
 
 ## 📋 Prerequisites
 
@@ -126,21 +126,6 @@ rental_contract_rag/
 4. **AI Analysis**: OpenAI GPT models analyze contracts using the retrieved legal context
 5. **Results**: Structured analysis is returned with specific legal findings
 
-## 🛠 Development
-
-### Code Quality
-
-The project uses:
-- **Ruff** for linting and formatting
-- **Pytest** for testing
-- **Type hints** for better code documentation
-
-Run code quality checks:
-```bash
-poetry run ruff check src tests
-poetry run ruff format src tests
-```
-
 ## 🚨 Troubleshooting
 
 ### Common Issues
@@ -160,11 +145,6 @@ poetry run ruff format src tests
 4. **Port Already in Use**
    - Change the port in `app.py`: `app.run_server(port=8051)`
 
-### Getting Help
-
-- Check the [Issues](https://github.com/your-username/rental_contract_rag/issues) page
-- Review the test files for usage examples
-- Check the exploration notebooks for detailed explanations
 
 ## 📄 License
 
