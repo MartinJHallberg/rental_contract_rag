@@ -271,7 +271,7 @@ app.layout = dbc.Container(
                                         ),
                                         html.Div(id="upload-status", className="mt-3"),
                                         # Hidden div to store current filename
-                                        html.Div(id="current-filename", style={"display": "none"}),
+                                        html.Div(id="current-filepath", style={"display": "none"}),
                                         dbc.Button(
                                             "Validate Contract",
                                             id="validate-button",
@@ -458,23 +458,19 @@ def create_contract_summary_filled(contract_info):
     )
 
 
-def load_sample_contract_file(contract_filename):
-    """Load a sample contract file and return base64 encoded content"""
+def get_sample_filepath(contract_filename):
+    """Load a sample contract file and return the file path"""
     try:
-
         # Get the directory where this script is located
         script_dir = Path(__file__).parent
 
         # Look for the file in the data directory
         file_path = script_dir / "data" / contract_filename
         if file_path.exists():
-            with open(file_path, "rb") as f:
-                file_content = f.read()
-            encoded_content = base64.b64encode(file_content).decode()
-            return f"data:application/pdf;base64,{encoded_content}"
+            return str(file_path)
         
         # If file not found, return None
-        return None
+        raise FileNotFoundError(f"Sample contract {contract_filename} not found")
     except Exception as e:
         print(f"Error loading sample contract {contract_filename}: {e}")
         return None
@@ -482,8 +478,7 @@ def load_sample_contract_file(contract_filename):
 
 # Callback for sample contract loading
 @callback(
-    [Output("upload-contract", "contents"), 
-     Output("current-filename", "children"),
+    [Output("current-filepath", "children"),
      Output("upload-status", "children"), 
      Output("validate-button", "disabled")],
     [Input(f"load-{contract['id']}", "n_clicks") for contract in SAMPLE_CONTRACTS],
@@ -505,12 +500,11 @@ def load_sample_contract(*n_clicks_list):
     if selected_contract is None:
         raise PreventUpdate
     
-    # Load the contract file
-    file_content = load_sample_contract_file(selected_contract["filename"])
+    # Get the file path
+    file_path = get_sample_filepath(selected_contract["filename"])
     
-    if file_content is None:
+    if file_path is None:
         return (
-            None,
             "",
             dbc.Alert(
                 f"❌ Sample contract file '{selected_contract['filename']}' not found",
@@ -521,8 +515,7 @@ def load_sample_contract(*n_clicks_list):
         )
     
     return (
-        file_content,
-        selected_contract["filename"],
+        file_path,  # Store the file path instead of filename
         dbc.Alert(
             f"✅ Sample contract loaded: {selected_contract['title']}", 
             color="success", 
@@ -537,20 +530,26 @@ def load_sample_contract(*n_clicks_list):
      Output("validate-button", "disabled", allow_duplicate=True)],
     [Input("upload-contract", "contents")],
     [State("upload-contract", "filename"),
-     State("current-filename", "children")],
+     State("current-filepath", "children")],
     prevent_initial_call=True,
 )
 def update_upload_status(contents, filename, current_filename):
     """Update upload status and enable/disable validate button"""
+    # If we have a sample contract loaded (current_filename has a path)
+    if current_filename and Path(current_filename).exists():
+        return dbc.Alert(
+            f"✅ Sample contract ready: {Path(current_filename).name}", 
+            color="success", 
+            dismissable=True
+        ), False
+    
+    # Otherwise check uploaded file
     if contents is None:
         return "", True
 
-    # Use current_filename if available (from sample contracts), otherwise use uploaded filename
-    display_filename = current_filename if current_filename else filename
-    
-    if display_filename and display_filename.endswith(".pdf"):
+    if filename and filename.endswith(".pdf"):
         return dbc.Alert(
-            f"✅ File ready: {display_filename}", color="success", dismissable=True
+            f"✅ File ready: {filename}", color="success", dismissable=True
         ), False
     else:
         return dbc.Alert(
@@ -569,21 +568,20 @@ def update_upload_status(contents, filename, current_filename):
     [Input("validate-button", "n_clicks")],
     [State("upload-contract", "contents"), 
      State("upload-contract", "filename"),
-     State("current-filename", "children")],
+     State("current-filepath", "children")],
     prevent_initial_call=True,
 )
 def validate_contract(n_clicks, contents, filename, current_filename):
     """Validate the uploaded contract and update individual cards"""
-    if n_clicks is None or contents is None:
+    if n_clicks is None:
         raise PreventUpdate
 
     try:
-        # Use current_filename if available (from sample contracts), otherwise use uploaded filename
-        display_filename = current_filename if current_filename else filename
+        # Determine the file path to use
+        
 
-        file_path = 
-        # Extract contract information (this will use caching from contract_loader)
-        contract_info = load_contract_and_extract_info(display_filename)
+        # Extract contract information
+        contract_info = load_contract_and_extract_info(file_path)
 
         # Perform validations
         deposit_result = validate_deposit_amount(

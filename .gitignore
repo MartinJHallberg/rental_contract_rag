@@ -85,7 +85,6 @@ docker-compose.override.yml
 
 # Model downloads and cached models
 models/
-.cache/
 
 # Large files that shouldn't be committed
 *.zip
