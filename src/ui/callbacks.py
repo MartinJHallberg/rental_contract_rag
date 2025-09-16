@@ -1,7 +1,7 @@
 """Dash callbacks for the app"""
 
 import dash
-from dash import Input, Output, State, callback
+from dash import Input, Output, State
 import dash_bootstrap_components as dbc
 from dash.exceptions import PreventUpdate
 from pathlib import Path

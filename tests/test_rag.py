@@ -3,7 +3,7 @@ from unittest.mock import Mock
 from langchain.schema import Document
 from langchain_openai import OpenAIEmbeddings
 from rag import RAGChain, validate_deposit_amount, LLMOutput
-from contract_loader import load_contract_and_extract_info, ContractInfo
+from contract_loader import load_contract_and_extract_info
 
 
 @pytest.fixture

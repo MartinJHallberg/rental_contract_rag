@@ -1,6 +1,4 @@
 import pytest
-import sys
-import os
 from app import create_app
 
 

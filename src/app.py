@@ -37,12 +37,12 @@ if __name__ == "__main__":
     else:
         display_host = host
 
-    print(f"\n" + "=" * 60)
-    print(f"🏠 Rental Contract Validator")
-    print(f"=" * 60)
+    print("\n" + "=" * 60)
+    print("🏠 Rental Contract Validator")
+    print("=" * 60)
     print(f"🌐 Server: http://{display_host}:{port}/")
     print(f"🔧 Debug: {'ON' if debug_mode else 'OFF'}")
     print(f"📡 Binding: {host}:{port}")
-    print(f"=" * 60)
+    print("=" * 60)
 
     app.run(debug=debug_mode, host=host, port=port)
