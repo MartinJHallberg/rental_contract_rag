@@ -39,6 +39,7 @@ def mock_embeddings():
 def rag_chain():
     return RAGChain()
 
+
 @pytest.mark.api_call
 def test_rag_chain(rag_chain):
     deposit_answer = validate_deposit_amount(
@@ -53,7 +54,6 @@ def test_rag_chain(rag_chain):
 def test_load_and_extract_contract_info_correct(rag_chain):
     file_path = "src/data/contract_everything_correct.pdf"
     extracted_contract_info = load_contract_and_extract_info(file_path)
-    
 
     deposit_answer = validate_deposit_amount(
         rag_chain,
@@ -64,13 +64,11 @@ def test_load_and_extract_contract_info_correct(rag_chain):
     assert deposit_answer.should_be_checked is False
 
 
-
 @pytest.mark.slow
 @pytest.mark.api_call
 def test_load_and_extract_contract_info_deposit_incorrect(rag_chain):
     file_path = "src/data/contract_incorrect_deposit.pdf"
     extracted_contract_info = load_contract_and_extract_info(file_path)
-    
 
     deposit_answer = validate_deposit_amount(
         rag_chain,

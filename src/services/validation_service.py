@@ -1,8 +1,13 @@
 """Contract validation services"""
+
 from contract_loader import load_contract_and_extract_info
 from rag import (
-    validate_deposit_amount, validate_prepaid_rent, validate_termination_conditions, validate_price_adjustments
+    validate_deposit_amount,
+    validate_prepaid_rent,
+    validate_termination_conditions,
+    validate_price_adjustments,
 )
+
 
 def validate_contract_file(rag_chain, file_path):
     """Validate a contract file and return all validation results"""
@@ -27,9 +32,9 @@ def validate_contract_file(rag_chain, file_path):
     )
 
     return {
-        'contract_info': contract_info,
-        'deposit_result': deposit_result,
-        'prepaid_result': prepaid_result,
-        'termination_result': termination_result,
-        'price_adjustment_result': price_adjustment_result
+        "contract_info": contract_info,
+        "deposit_result": deposit_result,
+        "prepaid_result": prepaid_result,
+        "termination_result": termination_result,
+        "price_adjustment_result": price_adjustment_result,
     }

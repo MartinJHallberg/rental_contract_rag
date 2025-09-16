@@ -1,13 +1,15 @@
 """App layout and structure"""
+
 import dash_bootstrap_components as dbc
 from dash import dcc, html
 
 from ui.contracts import SAMPLE_CONTRACTS
 from ui.components import (
-    create_sample_contract_card, 
-    create_placeholder_card, 
-    create_contract_summary_placeholder
+    create_sample_contract_card,
+    create_placeholder_card,
+    create_contract_summary_placeholder,
 )
+
 
 def create_layout():
     """Create the main app layout"""
@@ -19,7 +21,8 @@ def create_layout():
                     dbc.Col(
                         [
                             html.H1(
-                                "Rental Contract Validator", className="text-center mb-4"
+                                "Rental Contract Validator",
+                                className="text-center mb-4",
                             ),
                             html.P(
                                 "Upload a rental contract PDF or try our sample contracts to validate against Danish rental law.",
@@ -54,6 +57,7 @@ def create_layout():
         fluid=True,
     )
 
+
 def _create_sample_contracts_section():
     """Create the sample contracts section"""
     return dbc.Card(
@@ -62,18 +66,23 @@ def _create_sample_contracts_section():
                 [
                     html.H5("📄 Sample Contracts", className="card-title"),
                     html.P(
-                        html.B("Try these example contracts to see how the validator works"),
-                        className="card-text small text-muted mb-3"
+                        html.B(
+                            "Try these example contracts to see how the validator works"
+                        ),
+                        className="card-text small text-muted mb-3",
                     ),
-                    html.Div([
-                        create_sample_contract_card(contract)
-                        for contract in SAMPLE_CONTRACTS
-                    ]),
+                    html.Div(
+                        [
+                            create_sample_contract_card(contract)
+                            for contract in SAMPLE_CONTRACTS
+                        ]
+                    ),
                 ]
             )
         ],
-        className="mb-4"
+        className="mb-4",
     )
+
 
 def _create_file_upload_section():
     """Create the file upload section"""
@@ -119,33 +128,37 @@ def _create_file_upload_section():
         ]
     )
 
+
 def _create_validation_results_section():
     """Create the validation results section"""
-    return html.Div([
-        dcc.Loading(
-            id="loading",
-            type="default",
-            children=html.Div(id="loading-output"),
-        ),
-        
-        html.Div(
-            id="contract-summary",
-            children=[create_contract_summary_placeholder()],
-        ),
-        html.Div(
-            id="deposit-validation",
-            children=[create_placeholder_card("Deposit Amount Validation", "💰")],
-        ),
-        html.Div(
-            id="prepaid-validation",
-            children=[create_placeholder_card("Prepaid Rent Validation", "💰")],
-        ),
-        html.Div(
-            id="termination-validation",
-            children=[create_placeholder_card("Termination Conditions Validation", "📋")],
-        ),
-        html.Div(
-            id="price-validation",
-            children=[create_placeholder_card("Price Adjustment Validation", "💹")],
-        ),
-    ])
+    return html.Div(
+        [
+            dcc.Loading(
+                id="loading",
+                type="default",
+                children=html.Div(id="loading-output"),
+            ),
+            html.Div(
+                id="contract-summary",
+                children=[create_contract_summary_placeholder()],
+            ),
+            html.Div(
+                id="deposit-validation",
+                children=[create_placeholder_card("Deposit Amount Validation", "💰")],
+            ),
+            html.Div(
+                id="prepaid-validation",
+                children=[create_placeholder_card("Prepaid Rent Validation", "💰")],
+            ),
+            html.Div(
+                id="termination-validation",
+                children=[
+                    create_placeholder_card("Termination Conditions Validation", "📋")
+                ],
+            ),
+            html.Div(
+                id="price-validation",
+                children=[create_placeholder_card("Price Adjustment Validation", "💹")],
+            ),
+        ]
+    )

@@ -25,4 +25,3 @@ def test_load_and_extract_contract_info():
     assert extracted_contract_info.tenant == "Martin Hallberg"
     assert extracted_contract_info.monthly_rental_amount == "3000 kr"
     assert extracted_contract_info.deposit_amount == "9000 kr"
-

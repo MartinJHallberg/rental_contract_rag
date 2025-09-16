@@ -1,6 +1,8 @@
 """Reusable UI components for the Dash app"""
+
 import dash_bootstrap_components as dbc
 from dash import html
+
 
 def create_sample_contract_card(contract_info):
     """Create a card for sample contracts"""
@@ -16,7 +18,7 @@ def create_sample_contract_card(contract_info):
                         color=contract_info["color"],
                         size="sm",
                         className="w-100",
-                        n_clicks=0
+                        n_clicks=0,
                     ),
                 ]
             )
@@ -24,6 +26,7 @@ def create_sample_contract_card(contract_info):
         className="mb-2",
         outline=True,
     )
+
 
 def create_placeholder_card(title, icon="📋"):
     """Create a placeholder validation card"""
@@ -62,6 +65,7 @@ def create_placeholder_card(title, icon="📋"):
         className="mb-3",
     )
 
+
 def create_contract_summary_placeholder():
     """Create placeholder contract summary card"""
     return dbc.Card(
@@ -74,32 +78,48 @@ def create_contract_summary_placeholder():
                             dbc.Col(
                                 [
                                     html.Strong("Landlord: "),
-                                    html.Span("Waiting for data...", className="text-muted"),
+                                    html.Span(
+                                        "Waiting for data...", className="text-muted"
+                                    ),
                                     html.Br(),
                                     html.Strong("Tenant: "),
-                                    html.Span("Waiting for data...", className="text-muted"),
+                                    html.Span(
+                                        "Waiting for data...", className="text-muted"
+                                    ),
                                     html.Br(),
                                     html.Strong("Property: "),
-                                    html.Span("Waiting for data...", className="text-muted"),
+                                    html.Span(
+                                        "Waiting for data...", className="text-muted"
+                                    ),
                                     html.Br(),
                                     html.Strong("Monthly Rent: "),
-                                    html.Span("Waiting for data...", className="text-muted"),
+                                    html.Span(
+                                        "Waiting for data...", className="text-muted"
+                                    ),
                                 ],
                                 md=6,
                             ),
                             dbc.Col(
                                 [
                                     html.Strong("Deposit: "),
-                                    html.Span("Waiting for data...", className="text-muted"),
+                                    html.Span(
+                                        "Waiting for data...", className="text-muted"
+                                    ),
                                     html.Br(),
                                     html.Strong("Lease Duration: "),
-                                    html.Span("Waiting for data...", className="text-muted"),
+                                    html.Span(
+                                        "Waiting for data...", className="text-muted"
+                                    ),
                                     html.Br(),
                                     html.Strong("Rental Type: "),
-                                    html.Span("Waiting for data...", className="text-muted"),
+                                    html.Span(
+                                        "Waiting for data...", className="text-muted"
+                                    ),
                                     html.Br(),
                                     html.Strong("Start Date: "),
-                                    html.Span("Waiting for data...", className="text-muted"),
+                                    html.Span(
+                                        "Waiting for data...", className="text-muted"
+                                    ),
                                 ],
                                 md=6,
                             ),
@@ -111,6 +131,7 @@ def create_contract_summary_placeholder():
         className="mb-3",
     )
 
+
 def create_validation_card(title, result, is_compliant=None):
     """Create a validation result card"""
     if result is None:
@@ -119,7 +140,9 @@ def create_validation_card(title, result, is_compliant=None):
                 dbc.CardBody(
                     [
                         html.H5(title, className="card-title"),
-                        html.P("No validation performed", className="card-text text-muted"),
+                        html.P(
+                            "No validation performed", className="card-text text-muted"
+                        ),
                     ]
                 )
             ],
@@ -174,6 +197,7 @@ def create_validation_card(title, result, is_compliant=None):
         outline=True,
         className="mb-3",
     )
+
 
 def create_contract_summary_filled(contract_info):
     """Create filled contract summary card"""

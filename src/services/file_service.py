@@ -1,8 +1,10 @@
 """File handling services"""
+
 import base64
 import hashlib
 from pathlib import Path
 from config import CACHE_DIR
+
 
 def get_cached_file_path(contents, filename):
     """Generate a cached file path based on filename and content hash"""
@@ -28,6 +30,7 @@ def get_cached_file_path(contents, filename):
 
     return str(cached_file_path)
 
+
 def get_sample_filepath(contract_filename):
     """Get the file path for a sample contract"""
     try:
@@ -38,7 +41,7 @@ def get_sample_filepath(contract_filename):
         file_path = script_dir / "data" / contract_filename
         if file_path.exists():
             return str(file_path)
-        
+
         # If file not found, return None
         raise FileNotFoundError(f"Sample contract {contract_filename} not found")
     except Exception as e:
