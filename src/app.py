@@ -26,6 +26,24 @@ rag_chain = RAGChain()
 # Create cache directory for uploaded files
 CACHE_DIR.mkdir(exist_ok=True, parents=True)
 
+# Sample contracts configuration
+SAMPLE_CONTRACTS = [
+    {
+        "id": "contract_everything_correct",
+        "title": "✅ Compliant Contract",
+        "description": "A rental contract that follows all Danish rental law requirements.",
+        "filename": "contract_everything_correct.pdf",
+        "color": "success"
+    },
+    {
+        "id": "contract_incorrect_deposit",
+        "title": "⚠️ Incorrect Deposit",
+        "description": "A contract with deposit amount issues that violate Danish rental law.",
+        "filename": "contract_incorrect_deposit.pdf",
+        "color": "warning"
+    }
+]
+
 
 def get_cached_file_path(contents, filename):
     """Generate a cached file path based on filename and content hash"""
@@ -46,6 +64,30 @@ def get_cached_file_path(contents, filename):
     cached_file_path = CACHE_DIR / cached_filename
 
     return str(cached_file_path)
+
+
+def create_sample_contract_card(contract_info):
+    """Create a card for sample contracts"""
+    return dbc.Card(
+        [
+            dbc.CardBody(
+                [
+                    html.H6(contract_info["title"], className="card-title"),
+                    html.P(contract_info["description"], className="card-text small"),
+                    dbc.Button(
+                        "Load Contract",
+                        id=f"load-{contract_info['id']}",
+                        color=contract_info["color"],
+                        size="sm",
+                        className="w-100",
+                        n_clicks=0
+                    ),
+                ]
+            )
+        ],
+        className="mb-2",
+        outline=True,
+    )
 
 
 def create_placeholder_card(title, icon="📋"):
@@ -152,7 +194,7 @@ def create_contract_summary_placeholder():
     )
 
 
-# Updated app layout with left/right split
+# Updated app layout with sample contracts
 app.layout = dbc.Container(
     [
         # Header
@@ -164,7 +206,7 @@ app.layout = dbc.Container(
                             "Rental Contract Validator", className="text-center mb-4"
                         ),
                         html.P(
-                            "Upload a rental contract PDF to validate it against Danish rental law.",
+                            "Upload a rental contract PDF or try our sample contracts to validate against Danish rental law.",
                             className="text-center text-muted mb-4",
                         ),
                     ]
@@ -174,15 +216,36 @@ app.layout = dbc.Container(
         # Main content - split layout
         dbc.Row(
             [
-                # Left side - File upload
+                # Left side - File upload and sample contracts
                 dbc.Col(
                     [
+                        # Sample Contracts Section
                         dbc.Card(
                             [
                                 dbc.CardBody(
                                     [
-                                        html.H4(
-                                            "Upload Contract", className="card-title"
+                                        html.H5("📁 Sample Contracts", className="card-title"),
+                                        html.P(
+                                            "Try these example contracts to see how the validator works:",
+                                            className="card-text small text-muted mb-3"
+                                        ),
+                                        html.Div([
+                                            create_sample_contract_card(contract)
+                                            for contract in SAMPLE_CONTRACTS
+                                        ]),
+                                    ]
+                                )
+                            ],
+                            className="mb-4"
+                        ),
+                        
+                        # File Upload Section
+                        dbc.Card(
+                            [
+                                dbc.CardBody(
+                                    [
+                                        html.H5(
+                                            "📤 Upload Your Contract", className="card-title"
                                         ),
                                         dcc.Upload(
                                             id="upload-contract",
@@ -207,6 +270,8 @@ app.layout = dbc.Container(
                                             accept=".pdf",
                                         ),
                                         html.Div(id="upload-status", className="mt-3"),
+                                        # Hidden div to store current filename
+                                        html.Div(id="current-filename", style={"display": "none"}),
                                         dbc.Button(
                                             "Validate Contract",
                                             id="validate-button",
@@ -393,19 +458,99 @@ def create_contract_summary_filled(contract_info):
     )
 
 
+def load_sample_contract_file(contract_filename):
+    """Load a sample contract file and return base64 encoded content"""
+    try:
+
+        # Get the directory where this script is located
+        script_dir = Path(__file__).parent
+
+        # Look for the file in the data directory
+        file_path = script_dir / "data" / contract_filename
+        if file_path.exists():
+            with open(file_path, "rb") as f:
+                file_content = f.read()
+            encoded_content = base64.b64encode(file_content).decode()
+            return f"data:application/pdf;base64,{encoded_content}"
+        
+        # If file not found, return None
+        return None
+    except Exception as e:
+        print(f"Error loading sample contract {contract_filename}: {e}")
+        return None
+
+
+# Callback for sample contract loading
 @callback(
-    [Output("upload-status", "children"), Output("validate-button", "disabled")],
-    [Input("upload-contract", "contents")],
-    [State("upload-contract", "filename")],
+    [Output("upload-contract", "contents"), 
+     Output("current-filename", "children"),
+     Output("upload-status", "children"), 
+     Output("validate-button", "disabled")],
+    [Input(f"load-{contract['id']}", "n_clicks") for contract in SAMPLE_CONTRACTS],
+    prevent_initial_call=True,
 )
-def update_upload_status(contents, filename):
+def load_sample_contract(*n_clicks_list):
+    """Load a sample contract when its button is clicked"""
+    # Determine which button was clicked
+    ctx = dash.callback_context
+    if not ctx.triggered:
+        raise PreventUpdate
+    
+    button_id = ctx.triggered[0]["prop_id"].split(".")[0]
+    
+    # Find the corresponding contract
+    contract_id = button_id.replace("load-", "")
+    selected_contract = next((c for c in SAMPLE_CONTRACTS if c["id"] == contract_id), None)
+    
+    if selected_contract is None:
+        raise PreventUpdate
+    
+    # Load the contract file
+    file_content = load_sample_contract_file(selected_contract["filename"])
+    
+    if file_content is None:
+        return (
+            None,
+            "",
+            dbc.Alert(
+                f"❌ Sample contract file '{selected_contract['filename']}' not found",
+                color="danger",
+                dismissable=True
+            ),
+            True
+        )
+    
+    return (
+        file_content,
+        selected_contract["filename"],
+        dbc.Alert(
+            f"✅ Sample contract loaded: {selected_contract['title']}", 
+            color="success", 
+            dismissable=True
+        ),
+        False
+    )
+
+
+@callback(
+    [Output("upload-status", "children", allow_duplicate=True), 
+     Output("validate-button", "disabled", allow_duplicate=True)],
+    [Input("upload-contract", "contents")],
+    [State("upload-contract", "filename"),
+     State("current-filename", "children")],
+    prevent_initial_call=True,
+)
+def update_upload_status(contents, filename, current_filename):
     """Update upload status and enable/disable validate button"""
     if contents is None:
         return "", True
 
-    if filename and filename.endswith(".pdf"):
+    # Use current_filename if available (from sample contracts), otherwise use uploaded filename
+    display_filename = current_filename if current_filename else filename
+    
+    if display_filename and display_filename.endswith(".pdf"):
         return dbc.Alert(
-            f"✅ File uploaded: {filename}", color="success", dismissable=True
+            f"✅ File ready: {display_filename}", color="success", dismissable=True
         ), False
     else:
         return dbc.Alert(
@@ -422,20 +567,23 @@ def update_upload_status(contents, filename):
         Output("loading-output", "children"),
     ],
     [Input("validate-button", "n_clicks")],
-    [State("upload-contract", "contents"), State("upload-contract", "filename")],
+    [State("upload-contract", "contents"), 
+     State("upload-contract", "filename"),
+     State("current-filename", "children")],
     prevent_initial_call=True,
 )
-def validate_contract(n_clicks, contents, filename):
+def validate_contract(n_clicks, contents, filename, current_filename):
     """Validate the uploaded contract and update individual cards"""
     if n_clicks is None or contents is None:
         raise PreventUpdate
 
     try:
-        # Save file to cache and get path
-        cached_file_path = get_cached_file_path(contents, filename)
+        # Use current_filename if available (from sample contracts), otherwise use uploaded filename
+        display_filename = current_filename if current_filename else filename
 
+        file_path = 
         # Extract contract information (this will use caching from contract_loader)
-        contract_info = load_contract_and_extract_info(cached_file_path)
+        contract_info = load_contract_and_extract_info(display_filename)
 
         # Perform validations
         deposit_result = validate_deposit_amount(

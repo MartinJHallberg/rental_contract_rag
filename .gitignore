@@ -88,7 +88,6 @@ models/
 .cache/
 
 # Large files that shouldn't be committed
-*.pdf
 *.zip
 *.tar.gz
 *.rar
