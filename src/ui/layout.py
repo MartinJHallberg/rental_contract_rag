@@ -35,8 +35,8 @@ def create_layout():
                     # Left side - File upload and sample contracts
                     dbc.Col(
                         [
-                            _create_sample_contracts_section(),
                             _create_file_upload_section(),
+                            _create_sample_contracts_section(),
                         ],
                         md=4,
                     ),
@@ -60,9 +60,9 @@ def _create_sample_contracts_section():
         [
             dbc.CardBody(
                 [
-                    html.H5("📁 Sample Contracts", className="card-title"),
+                    html.H5("📄 Sample Contracts", className="card-title"),
                     html.P(
-                        "Try these example contracts to see how the validator works:",
+                        html.B("Try these example contracts to see how the validator works"),
                         className="card-text small text-muted mb-3"
                     ),
                     html.Div([
@@ -122,7 +122,6 @@ def _create_file_upload_section():
 def _create_validation_results_section():
     """Create the validation results section"""
     return html.Div([
-        html.H4("Validation Results", className="mb-4"),
         dcc.Loading(
             id="loading",
             type="default",
@@ -136,6 +135,10 @@ def _create_validation_results_section():
         html.Div(
             id="deposit-validation",
             children=[create_placeholder_card("Deposit Amount Validation", "💰")],
+        ),
+        html.Div(
+            id="prepaid-validation",
+            children=[create_placeholder_card("Prepaid Rent Validation", "💰")],
         ),
         html.Div(
             id="termination-validation",

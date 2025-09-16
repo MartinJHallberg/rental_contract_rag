@@ -94,6 +94,7 @@ def register_callbacks(app, rag_chain):
         [
             Output("contract-summary", "children"),
             Output("deposit-validation", "children"),
+            Output("prepaid-validation", "children"),
             Output("termination-validation", "children"),
             Output("price-validation", "children"),
             Output("loading-output", "children"),
@@ -124,6 +125,7 @@ def register_callbacks(app, rag_chain):
             return (
                 create_contract_summary_filled(results['contract_info']),
                 create_validation_card("Deposit Amount Validation", results['deposit_result']),
+                create_validation_card("Prepaid Rent Validation", results['prepaid_result']),
                 create_validation_card("Termination Conditions Validation", results['termination_result']),
                 create_validation_card("Price Adjustment Validation", results['price_adjustment_result']),
                 "",  # Clear loading

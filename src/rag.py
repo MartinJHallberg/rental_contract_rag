@@ -100,6 +100,13 @@ def validate_deposit_amount(
     """Check if deposit amount is legal"""
     question = f"Is a deposit of {deposit_amount} legal for a rental property with monthly rent of {monthly_rental_amount}?"
     return rag_chain.ask(question)
+    
+def validate_prepaid_rent(
+    rag_chain: RAGChain, prepaid_rent: str, monthly_rental_amount: str
+) -> LLMOutput:
+    """Check if prepaid rent is legal"""
+    question = f"Is a prepaid rent of {prepaid_rent} legal for a rental property with monthly rent of {monthly_rental_amount}?"
+    return rag_chain.ask(question)
 
 
 def validate_termination_conditions(
