@@ -1,4 +1,3 @@
-// filepath: c:\Projects\rental_contract_rag\src\ui\components.py
 """Reusable UI components for the Dash app"""
 import dash_bootstrap_components as dbc
 from dash import html
@@ -151,6 +150,11 @@ def create_validation_card(title, result, is_compliant=None):
         refs = [f"{para} (Page {page})" for para, page in references.items()]
         references_text = "References: " + ", ".join(refs)
 
+    # Build card body children, filtering out None values
+    card_body_children = [html.P(description, className="card-text")]
+    if references_text:
+        card_body_children.append(html.Small(references_text, className="text-muted"))
+
     return dbc.Card(
         [
             dbc.CardHeader(
@@ -164,14 +168,7 @@ def create_validation_card(title, result, is_compliant=None):
                     )
                 ]
             ),
-            dbc.CardBody(
-                [
-                    html.P(description, className="card-text"),
-                    html.Small(references_text, className="text-muted")
-                    if references_text
-                    else None,
-                ]
-            ),
+            dbc.CardBody(card_body_children),
         ],
         color=card_color,
         outline=True,
@@ -190,32 +187,32 @@ def create_contract_summary_filled(contract_info):
                             dbc.Col(
                                 [
                                     html.Strong("Landlord: "),
-                                    contract_info.landlord,
+                                    html.Span(str(contract_info.landlord)),
                                     html.Br(),
                                     html.Strong("Tenant: "),
-                                    contract_info.tenant,
+                                    html.Span(str(contract_info.tenant)),
                                     html.Br(),
                                     html.Strong("Property: "),
-                                    contract_info.property_address,
+                                    html.Span(str(contract_info.property_address)),
                                     html.Br(),
                                     html.Strong("Monthly Rent: "),
-                                    contract_info.monthly_rental_amount,
+                                    html.Span(str(contract_info.monthly_rental_amount)),
                                 ],
                                 md=6,
                             ),
                             dbc.Col(
                                 [
                                     html.Strong("Deposit: "),
-                                    contract_info.deposit_amount,
+                                    html.Span(str(contract_info.deposit_amount)),
                                     html.Br(),
                                     html.Strong("Lease Duration: "),
-                                    contract_info.lease_duration,
+                                    html.Span(str(contract_info.lease_duration)),
                                     html.Br(),
                                     html.Strong("Rental Type: "),
-                                    contract_info.rental_type,
+                                    html.Span(str(contract_info.rental_type)),
                                     html.Br(),
                                     html.Strong("Start Date: "),
-                                    contract_info.lease_start_date,
+                                    html.Span(str(contract_info.lease_start_date)),
                                 ],
                                 md=6,
                             ),

@@ -1,12 +1,12 @@
-// filepath: c:\Projects\rental_contract_rag\src\ui\callbacks.py
 """Dash callbacks for the app"""
 import dash
 from dash import Input, Output, State, callback
 import dash_bootstrap_components as dbc
 from dash.exceptions import PreventUpdate
 from pathlib import Path
+from dash import html
 
-from models.contracts import SAMPLE_CONTRACTS
+from ui.contracts import SAMPLE_CONTRACTS
 from services.file_service import get_cached_file_path, get_sample_filepath
 from services.validation_service import validate_contract_file
 from ui.components import (

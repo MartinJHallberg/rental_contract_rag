@@ -1,4 +1,3 @@
-// filepath: c:\Projects\rental_contract_rag\src\services\validation_service.py
 """Contract validation services"""
 from contract_loader import load_contract_and_extract_info
 from rag import validate_deposit_amount, validate_termination_conditions, validate_price_adjustments

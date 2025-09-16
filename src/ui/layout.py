@@ -1,9 +1,8 @@
-// filepath: c:\Projects\rental_contract_rag\src\ui\layout.py
 """App layout and structure"""
 import dash_bootstrap_components as dbc
 from dash import dcc, html
 
-from models.contracts import SAMPLE_CONTRACTS
+from ui.contracts import SAMPLE_CONTRACTS
 from ui.components import (
     create_sample_contract_card, 
     create_placeholder_card, 
@@ -122,13 +121,14 @@ def _create_file_upload_section():
 
 def _create_validation_results_section():
     """Create the validation results section"""
-    return [
+    return html.Div([
         html.H4("Validation Results", className="mb-4"),
         dcc.Loading(
             id="loading",
             type="default",
             children=html.Div(id="loading-output"),
         ),
+        
         html.Div(
             id="contract-summary",
             children=[create_contract_summary_placeholder()],
@@ -145,4 +145,4 @@ def _create_validation_results_section():
             id="price-validation",
             children=[create_placeholder_card("Price Adjustment Validation", "💹")],
         ),
-    ]
+    ])

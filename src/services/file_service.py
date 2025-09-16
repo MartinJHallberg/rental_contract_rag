@@ -1,4 +1,3 @@
-// filepath: c:\Projects\rental_contract_rag\src\services\file_service.py
 """File handling services"""
 import base64
 import hashlib
