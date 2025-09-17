@@ -11,6 +11,8 @@ from typing import Dict
 import os
 import hashlib
 import json
+import pickle
+from functools import lru_cache
 from config import CACHE_DIR, LLM_MODEL, LLM_TEMPERATURE
 
 
@@ -100,46 +102,68 @@ class RentalContract(BaseModel):
     file_name: str = Field(description="File name of the contract")
 
 
-def parse_contract_pdf_to_text(file_path: str) -> RentalContract:
-    """Parse a PDF rental contract to text using OCR"""
+def _get_cache_file_path(cache_key: str, prefix: str) -> str:
+    """Get the cache file path for a given cache key"""
+    os.makedirs(CACHE_DIR, exist_ok=True)
+    cache_hash = hashlib.sha256(cache_key.encode("utf-8")).hexdigest()
+    return os.path.join(CACHE_DIR, f"{prefix}_{cache_hash}.json")
 
-    # Ensure cache directory exists
-    cache_dir = CACHE_DIR
-    os.makedirs(cache_dir, exist_ok=True)
 
-    # Create a unique cache key based on file path
-    cache_key_str = f"pdf_parse:{file_path}"
-    cache_key_hash = hashlib.sha256(cache_key_str.encode("utf-8")).hexdigest()
-    cache_file_path = os.path.join(cache_dir, f"{cache_key_hash}.json")
-
-    # Try to load from cache
+def _load_from_disk_cache(cache_key: str, prefix: str, model_class):
+    """Load cached data from disk"""
+    cache_file_path = _get_cache_file_path(cache_key, prefix)
     if os.path.exists(cache_file_path):
-        with open(cache_file_path, "r", encoding="utf-8") as f:
-            cached_data = json.load(f)
-        return RentalContract(**cached_data)
+        try:
+            with open(cache_file_path, "r", encoding="utf-8") as f:
+                cached_data = json.load(f)
+            return model_class(**cached_data)
+        except (json.JSONDecodeError, TypeError, ValueError):
+            # If cache is corrupted, remove it
+            os.remove(cache_file_path)
+    return None
 
-    # If not in cache, process the PDF
-    pages = convert_from_path(
-        file_path,
-    )
+
+def _save_to_disk_cache(cache_key: str, prefix: str, data):
+    """Save data to disk cache"""
+    cache_file_path = _get_cache_file_path(cache_key, prefix)
+    try:
+        with open(cache_file_path, "w", encoding="utf-8") as f:
+            if hasattr(data, "model_dump"):
+                json.dump(data.model_dump(), f, ensure_ascii=False, indent=2)
+            else:
+                json.dump(data, f, ensure_ascii=False, indent=2)
+    except Exception:
+        # If saving fails, continue without caching
+        pass
+
+
+@lru_cache(maxsize=128)
+def parse_contract_pdf_to_text(file_path: str) -> RentalContract:
+    """Parse a PDF rental contract to text using OCR with persistent caching"""
+
+    # Check disk cache first
+    cache_key = f"pdf_parse:{file_path}"
+    cached_result = _load_from_disk_cache(cache_key, "pdf", RentalContract)
+    if cached_result:
+        return cached_result
+
+    # Process the PDF
+    pages = convert_from_path(file_path)
     text = ""
     for page in pages:
         text += pytesseract.image_to_string(page)
 
-    # Save to cache
-    with open(cache_file_path, "w", encoding="utf-8") as f:
-        json.dump(
-            {"text": text, "file_name": Path(file_path).name},
-            f,
-            ensure_ascii=False,
-            indent=2,
-        )
+    result = RentalContract(text=text, file_name=Path(file_path).name)
 
-    return RentalContract(text=text, file_name=Path(file_path).name)
+    # Save to disk cache
+    _save_to_disk_cache(cache_key, "pdf", result)
+
+    return result
 
 
-def extract_contract_info(rental_contract: RentalContract) -> ContractInfo:
-    """Extract key information from a rental contract using an LLM"""
+@lru_cache(maxsize=128)
+def extract_contract_info(contract_text: str, file_name: str) -> ContractInfo:
+    """Extract key information from a rental contract using an LLM with persistent caching"""
 
     # Create Pydantic output parser
     parser = PydanticOutputParser(pydantic_object=ContractInfo)
@@ -157,6 +181,12 @@ def extract_contract_info(rental_contract: RentalContract) -> ContractInfo:
     {{contract_text}}
     """
 
+    # Check disk cache first
+    cache_key = f"contract_info_{file_name}:{prompt_contract_all_info}"
+    cached_result = _load_from_disk_cache(cache_key, "info", ContractInfo)
+    if cached_result:
+        return cached_result
+
     llm = ChatOpenAI(model_name=LLM_MODEL, temperature=LLM_TEMPERATURE)
 
     prompt_template = PromptTemplate(
@@ -170,35 +200,17 @@ def extract_contract_info(rental_contract: RentalContract) -> ContractInfo:
         prompt=prompt_template,
     )
 
-    # Ensure cache directory exists
-    cache_dir = CACHE_DIR
-    os.makedirs(cache_dir, exist_ok=True)
-
-    # Create a unique cache key based on file name and prompt
-    cache_key_str = (
-        f"contract_info_{rental_contract.file_name}:{prompt_contract_all_info}"
-    )
-    cache_key_hash = hashlib.sha256(cache_key_str.encode("utf-8")).hexdigest()
-    cache_file_path = os.path.join(cache_dir, f"{cache_key_hash}.json")
-
-    # Try to load from cache
-    if os.path.exists(cache_file_path):
-        with open(cache_file_path, "r", encoding="utf-8") as f:
-            cached_data = json.load(f)
-        return ContractInfo(**cached_data)
-
     # Get the raw output and parse with Pydantic
-    raw_output = llm_chain.run(contract_text=rental_contract.text)
+    raw_output = llm_chain.run(contract_text=contract_text)
     result = parser.parse(raw_output)
 
-    # Save to cache
-    with open(cache_file_path, "w", encoding="utf-8") as f:
-        json.dump(result.model_dump(), f, ensure_ascii=False, indent=2)
+    # Save to disk cache
+    _save_to_disk_cache(cache_key, "info", result)
 
     return result
 
 
 def load_contract_and_extract_info(file_path: str) -> ContractInfo:
     contract = parse_contract_pdf_to_text(file_path)
-    contract_info = extract_contract_info(contract)
+    contract_info = extract_contract_info(contract.text, contract.file_name)
     return contract_info

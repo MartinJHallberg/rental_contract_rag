@@ -108,28 +108,19 @@ def register_callbacks(app, rag_chain):
         ],
         [Input("validate-button", "n_clicks")],
         [
-            State("upload-contract", "contents"),
-            State("upload-contract", "filename"),
             State("current-filepath", "children"),
         ],
         prevent_initial_call=True,
     )
-    def validate_contract(n_clicks, contents, filename, current_filepath):
+    def validate_contract(n_clicks, current_filepath):
         """Validate the uploaded contract and update individual cards"""
         if n_clicks is None:
             raise PreventUpdate
 
         try:
-            # Determine the file path to use
-            if current_filepath and Path(current_filepath).exists():
-                file_path = current_filepath
-            elif contents is not None:
-                file_path = get_cached_file_path(contents, filename)
-            else:
-                raise ValueError("No file available for validation")
 
             # Validate the contract
-            results = validate_contract_file(rag_chain, file_path)
+            results = validate_contract_file(rag_chain, current_filepath)
 
             return (
                 create_contract_summary_filled(results["contract_info"]),

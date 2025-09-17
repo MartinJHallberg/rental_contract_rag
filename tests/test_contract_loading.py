@@ -9,8 +9,8 @@ from contract_loader import (
 @pytest.mark.slow
 def test_parse_contract_pdf_to_text():
     file_path = "src/data/contract_everything_correct.pdf"
-    text = parse_contract_pdf_to_text(file_path)
-    assert "Typeformular" in text
+    rental_contract = parse_contract_pdf_to_text(file_path)
+    assert "Typeformular" in rental_contract.text
 
 
 @pytest.mark.slow
