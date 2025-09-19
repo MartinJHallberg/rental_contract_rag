@@ -121,10 +121,10 @@ def _create_file_upload_section():
                         [
                             dbc.Col(
                                 dbc.Button(
-                                    "Clear",
+                                    "Clear uploaded contract",
                                     id="clear-upload-button",
-                                    color="light",
-                                    size="sm",
+                                    color="secondary",
+                                    size="md",
                                     className="mt-3",
                                     disabled=True,
                                 ),
