@@ -114,14 +114,34 @@ def _create_file_upload_section():
                         accept=".pdf",
                     ),
                     html.Div(id="upload-status", className="mt-3"),
+                    # Hidden components to store contract state
+                    dcc.Store(id="contract-store"),  # Stores contract data
                     html.Div(id="current-filepath", style={"display": "none"}),
-                    dbc.Button(
-                        "Validate Contract",
-                        id="validate-button",
-                        color="primary",
-                        size="lg",
-                        className="mt-3 w-100",
-                        disabled=True,
+                    dbc.Row(
+                        [
+                            dbc.Col(
+                                dbc.Button(
+                                    "Clear",
+                                    id="clear-upload-button",
+                                    color="light",
+                                    size="sm",
+                                    className="mt-3",
+                                    disabled=True,
+                                ),
+                                width="auto",
+                            ),
+                            dbc.Col(
+                                dbc.Button(
+                                    "Validate Contract",
+                                    id="validate-button",
+                                    color="primary",
+                                    size="lg",
+                                    className="mt-3",
+                                    disabled=True,
+                                ),
+                            ),
+                        ],
+                        className="g-2",
                     ),
                 ]
             )
@@ -160,5 +180,12 @@ def _create_validation_results_section():
                 id="price-validation",
                 children=[create_placeholder_card("Price Adjustment Validation", "💹")],
             ),
-        ]
+        ],
+        id="validation-results-container",
+        className="validation-results-disabled",
+        style={
+            "opacity": "0.4",
+            "pointer-events": "none",
+            "transition": "opacity 0.3s ease",
+        },
     )
