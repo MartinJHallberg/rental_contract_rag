@@ -156,9 +156,9 @@ def _create_validation_results_section():
             dcc.Loading(
                 id="loading",
                 type="default",
-                children=html.Div(id="loading-output"),
-            ),
-            html.Div(
+                children=
+                [
+                                html.Div(
                 id="contract-summary",
                 children=[create_contract_summary_placeholder()],
             ),
@@ -180,6 +180,9 @@ def _create_validation_results_section():
                 id="price-validation",
                 children=[create_placeholder_card("Price Adjustment Validation", "💹")],
             ),
+                ]
+            ),
+
         ],
         id="validation-results-container",
         className="validation-results-disabled",

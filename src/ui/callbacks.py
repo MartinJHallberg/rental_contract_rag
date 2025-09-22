@@ -157,7 +157,6 @@ def register_callbacks(app, rag_chain):
             Output("prepaid-validation", "children"),
             Output("termination-validation", "children"),
             Output("price-validation", "children"),
-            Output("loading-output", "children"),
             Output("validation-results-container", "style", allow_duplicate=True),
             Output("validation-results-container", "className", allow_duplicate=True),
         ],
@@ -194,7 +193,6 @@ def register_callbacks(app, rag_chain):
                     "pointer-events": "auto",
                     "transition": "all 0.3s ease",
                 },
-                ""
             )
 
         except Exception as e:
