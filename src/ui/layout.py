@@ -156,33 +156,39 @@ def _create_validation_results_section():
             dcc.Loading(
                 id="loading",
                 type="default",
-                children=
-                [
-                                html.Div(
-                id="contract-summary",
-                children=[create_contract_summary_placeholder()],
-            ),
-            html.Div(
-                id="deposit-validation",
-                children=[create_placeholder_card("Deposit Amount Validation", "💰")],
-            ),
-            html.Div(
-                id="prepaid-validation",
-                children=[create_placeholder_card("Prepaid Rent Validation", "💰")],
-            ),
-            html.Div(
-                id="termination-validation",
                 children=[
-                    create_placeholder_card("Termination Conditions Validation", "📋")
+                    html.Div(
+                        id="contract-summary",
+                        children=[create_contract_summary_placeholder()],
+                    ),
+                    html.Div(
+                        id="deposit-validation",
+                        children=[
+                            create_placeholder_card("Deposit Amount Validation", "💰")
+                        ],
+                    ),
+                    html.Div(
+                        id="prepaid-validation",
+                        children=[
+                            create_placeholder_card("Prepaid Rent Validation", "💰")
+                        ],
+                    ),
+                    html.Div(
+                        id="termination-validation",
+                        children=[
+                            create_placeholder_card(
+                                "Termination Conditions Validation", "📋"
+                            )
+                        ],
+                    ),
+                    html.Div(
+                        id="price-validation",
+                        children=[
+                            create_placeholder_card("Price Adjustment Validation", "💹")
+                        ],
+                    ),
                 ],
             ),
-            html.Div(
-                id="price-validation",
-                children=[create_placeholder_card("Price Adjustment Validation", "💹")],
-            ),
-                ]
-            ),
-
         ],
         id="validation-results-container",
         className="validation-results-disabled",

@@ -43,14 +43,16 @@ def create_placeholder_card(title, icon="📋"):
                         className="text-muted",
                     ),
                 ],
-                title=html.Div([
-                    html.Span(f"{icon} {title}", className="text-muted"),
-                    dbc.Badge(
-                        "Waiting for validation",
-                        color="secondary",
-                        className="ms-2 float-end",
-                    ),
-                ]),
+                title=html.Div(
+                    [
+                        html.Span(f"{icon} {title}", className="text-muted"),
+                        dbc.Badge(
+                            "Waiting for validation",
+                            color="secondary",
+                            className="ms-2 float-end",
+                        ),
+                    ]
+                ),
                 item_id=f"placeholder-{title.lower().replace(' ', '-')}",
             )
         ],
@@ -132,9 +134,7 @@ def create_validation_card(title, result, is_compliant=None):
             [
                 dbc.AccordionItem(
                     [
-                        html.P(
-                            "No validation performed", className="text-muted"
-                        ),
+                        html.P("No validation performed", className="text-muted"),
                     ],
                     title=f"📋 {title}",
                     item_id=f"accordion-{title.lower().replace(' ', '-')}",
@@ -167,33 +167,44 @@ def create_validation_card(title, result, is_compliant=None):
 
     # Create references content
     accordion_content = [html.P(description, className="mb-2")]
-    
+
     if references:
-        accordion_content.extend([
-            html.Hr(),
-            html.H6("📖 References:", className="mt-3 mb-2"),
-            html.Ul([
-                html.Li([
-                    html.Strong(f"Page {page}: "),
-                    html.Span(para)
-                ], className="mb-1") for para, page in references.items()
-            ], className="small")
-        ])
+        accordion_content.extend(
+            [
+                html.Hr(),
+                html.H6("📖 References:", className="mt-3 mb-2"),
+                html.Ul(
+                    [
+                        html.Li(
+                            [html.Strong(f"Page {page}: "), html.Span(para)],
+                            className="mb-1",
+                        )
+                        for para, page in references.items()
+                    ],
+                    className="small",
+                ),
+            ]
+        )
 
     return dbc.Accordion(
         [
             dbc.AccordionItem(
                 accordion_content,
-                title=html.Div([
-                    html.Span(f"{icon} {title}", className=header_class),
-                    dbc.Badge(status, color=badge_color, className="ms-2 float-end"),
-                ]),
+                title=html.Div(
+                    [
+                        html.Span(f"{icon} {title}", className=header_class),
+                        dbc.Badge(
+                            status, color=badge_color, className="ms-2 float-end"
+                        ),
+                    ]
+                ),
                 item_id=f"accordion-{title.lower().replace(' ', '-')}",
             )
         ],
         start_collapsed=True,
         className="mb-3",
     )
+
 
 def create_contract_summary_filled(contract_info):
     """Create filled contract summary card"""

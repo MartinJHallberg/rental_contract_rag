@@ -22,9 +22,10 @@ def register_callbacks(app, rag_chain):
 
     @app.callback(
         Output("contract-store", "data"),
-        [Input("upload-contract", "contents"),
-         Input("clear-upload-button", "n_clicks")] + 
-        [Input(f"load-{contract['id']}", "n_clicks") for contract in SAMPLE_CONTRACTS],
+        [Input("upload-contract", "contents"), Input("clear-upload-button", "n_clicks")]
+        + [
+            Input(f"load-{contract['id']}", "n_clicks") for contract in SAMPLE_CONTRACTS
+        ],
         [State("upload-contract", "filename")],
         prevent_initial_call=True,
     )
@@ -47,7 +48,7 @@ def register_callbacks(app, rag_chain):
             selected_contract = next(
                 (c for c in SAMPLE_CONTRACTS if c["id"] == contract_id), None
             )
-            
+
             if selected_contract:
                 file_path = get_sample_filepath(selected_contract["filename"])
                 if file_path:
@@ -55,12 +56,12 @@ def register_callbacks(app, rag_chain):
                         "type": "sample",
                         "filepath": file_path,
                         "title": selected_contract["title"],
-                        "filename": selected_contract["filename"]
+                        "filename": selected_contract["filename"],
                     }
                 else:
                     return {
                         "type": "error",
-                        "message": f"Sample contract file '{selected_contract['filename']}' not found"
+                        "message": f"Sample contract file '{selected_contract['filename']}' not found",
                     }
 
         # Handle upload
@@ -68,18 +69,11 @@ def register_callbacks(app, rag_chain):
             if contents is None:
                 # Upload was cleared
                 return None
-            
+
             if filename and filename.endswith(".pdf"):
-                return {
-                    "type": "upload",
-                    "contents": contents,
-                    "filename": filename
-                }
+                return {"type": "upload", "contents": contents, "filename": filename}
             else:
-                return {
-                    "type": "error",
-                    "message": "Please upload a PDF file"
-                }
+                return {"type": "error", "message": "Please upload a PDF file"}
 
         return None
 
@@ -106,12 +100,14 @@ def register_callbacks(app, rag_chain):
                     "pointer-events": "none",
                     "transition": "opacity 0.3s ease",
                 },
-                "validation-results-disabled"
+                "validation-results-disabled",
             )
-        
+
         if contract_data.get("type") == "error":
             return (
-                dbc.Alert(f"❌ {contract_data['message']}", color="danger", dismissable=True),
+                dbc.Alert(
+                    f"❌ {contract_data['message']}", color="danger", dismissable=True
+                ),
                 True,  # Validate button disabled
                 True,  # Clear button disabled
                 {
@@ -119,12 +115,16 @@ def register_callbacks(app, rag_chain):
                     "pointer-events": "none",
                     "transition": "opacity 0.3s ease",
                 },
-                "validation-results-disabled"
+                "validation-results-disabled",
             )
-        
+
         elif contract_data.get("type") == "sample":
             return (
-                dbc.Alert(f"✅ Sample contract loaded: {contract_data['title']}", color="success", dismissable=False),
+                dbc.Alert(
+                    f"✅ Sample contract loaded: {contract_data['title']}",
+                    color="success",
+                    dismissable=False,
+                ),
                 False,  # Validate button enabled
                 False,  # Clear button enabled
                 {
@@ -132,12 +132,16 @@ def register_callbacks(app, rag_chain):
                     "pointer-events": "none",
                     "transition": "opacity 0.3s ease",
                 },
-                "validation-results-disabled"
+                "validation-results-disabled",
             )
-        
+
         elif contract_data.get("type") == "upload":
             return (
-                dbc.Alert(f"✅ File ready: {contract_data['filename']}", color="success", dismissable=True),
+                dbc.Alert(
+                    f"✅ File ready: {contract_data['filename']}",
+                    color="success",
+                    dismissable=True,
+                ),
                 False,  # Validate button enabled
                 False,  # Clear button enabled
                 {
@@ -145,9 +149,9 @@ def register_callbacks(app, rag_chain):
                     "pointer-events": "none",
                     "transition": "opacity 0.3s ease",
                 },
-                "validation-results-disabled"
+                "validation-results-disabled",
             )
-        
+
         return "", True, True, {}, ""
 
     @app.callback(
@@ -174,7 +178,9 @@ def register_callbacks(app, rag_chain):
             if contract_data.get("type") == "sample":
                 file_path = contract_data["filepath"]
             elif contract_data.get("type") == "upload":
-                file_path = get_cached_file_path(contract_data["contents"], contract_data["filename"])
+                file_path = get_cached_file_path(
+                    contract_data["contents"], contract_data["filename"]
+                )
             else:
                 raise ValueError("No valid contract loaded")
 
@@ -183,16 +189,24 @@ def register_callbacks(app, rag_chain):
 
             return (
                 create_contract_summary_filled(results["contract_info"]),
-                create_validation_card("Deposit Amount Validation", results["deposit_result"]),
-                create_validation_card("Prepaid Rent Validation", results["prepaid_result"]),
-                create_validation_card("Termination Conditions Validation", results["termination_result"]),
-                create_validation_card("Price Adjustment Validation", results["price_adjustment_result"]),
-                "",  # Clear loading
+                create_validation_card(
+                    "Deposit Amount Validation", results["deposit_result"]
+                ),
+                create_validation_card(
+                    "Prepaid Rent Validation", results["prepaid_result"]
+                ),
+                create_validation_card(
+                    "Termination Conditions Validation", results["termination_result"]
+                ),
+                create_validation_card(
+                    "Price Adjustment Validation", results["price_adjustment_result"]
+                ),
                 {
                     "opacity": "1",
                     "pointer-events": "auto",
                     "transition": "all 0.3s ease",
                 },
+                "",  # Empty string for className (validation results enabled)
             )
 
         except Exception as e:
@@ -211,11 +225,10 @@ def register_callbacks(app, rag_chain):
                 create_placeholder_card("Prepaid Rent Validation", "💰"),
                 create_placeholder_card("Termination Conditions Validation", "📋"),
                 create_placeholder_card("Price Adjustment Validation", "💹"),
-                "",
                 {
                     "opacity": "0.4",
                     "pointer-events": "none",
                     "transition": "opacity 0.3s ease",
                 },
-                "validation-results-disabled"
+                "validation-results-disabled",
             )
