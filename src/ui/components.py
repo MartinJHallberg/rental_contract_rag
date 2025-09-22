@@ -29,39 +29,32 @@ def create_sample_contract_card(contract_info):
 
 
 def create_placeholder_card(title, icon="📋"):
-    """Create a placeholder validation card"""
-    return dbc.Card(
+    """Create a placeholder validation accordion"""
+    return dbc.Accordion(
         [
-            dbc.CardHeader(
-                [
-                    html.H5(
-                        [
-                            icon + " " + title,
-                            dbc.Badge(
-                                "Waiting for validation",
-                                color="secondary",
-                                className="ms-2",
-                            ),
-                        ],
-                        className="mb-0",
-                    )
-                ]
-            ),
-            dbc.CardBody(
+            dbc.AccordionItem(
                 [
                     html.P(
                         "Upload and validate a contract to see results here.",
-                        className="card-text text-muted",
+                        className="text-muted mb-2",
                     ),
                     html.Small(
                         "References will appear here when available.",
                         className="text-muted",
                     ),
-                ]
-            ),
+                ],
+                title=html.Div([
+                    html.Span(f"{icon} {title}", className="text-muted"),
+                    dbc.Badge(
+                        "Waiting for validation",
+                        color="secondary",
+                        className="ms-2 float-end",
+                    ),
+                ]),
+                item_id=f"placeholder-{title.lower().replace(' ', '-')}",
+            )
         ],
-        color="light",
-        outline=True,
+        start_collapsed=True,
         className="mb-3",
     )
 
