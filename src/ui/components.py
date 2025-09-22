@@ -133,71 +133,74 @@ def create_contract_summary_placeholder():
 
 
 def create_validation_card(title, result, is_compliant=None):
-    """Create a validation result card"""
+    """Create a validation result accordion"""
     if result is None:
-        return dbc.Card(
+        return dbc.Accordion(
             [
-                dbc.CardBody(
+                dbc.AccordionItem(
                     [
-                        html.H5(title, className="card-title"),
                         html.P(
-                            "No validation performed", className="card-text text-muted"
+                            "No validation performed", className="text-muted"
                         ),
-                    ]
+                    ],
+                    title=f"📋 {title}",
+                    item_id=f"accordion-{title.lower().replace(' ', '-')}",
                 )
             ],
+            start_collapsed=True,
             className="mb-3",
         )
 
-    # Determine card color based on compliance
+    # Determine status based on compliance
     if hasattr(result, "should_be_checked"):
         if result.should_be_checked:
-            card_color = "warning"
             icon = "⚠️"
             status = "Requires Review"
+            header_class = "text-warning"
+            badge_color = "warning"
         else:
-            card_color = "success"
             icon = "✅"
             status = "Compliant"
+            header_class = "text-success"
+            badge_color = "success"
     else:
-        card_color = "info"
         icon = "ℹ️"
         status = "Checked"
+        header_class = "text-info"
+        badge_color = "info"
 
     description = result.description if hasattr(result, "description") else str(result)
     references = result.references if hasattr(result, "references") else {}
 
-    # Create references text
-    references_text = ""
+    # Create references content
+    accordion_content = [html.P(description, className="mb-2")]
+    
     if references:
-        refs = [f"{para} (Page {page})" for para, page in references.items()]
-        references_text = "References: " + ", ".join(refs)
+        accordion_content.extend([
+            html.Hr(),
+            html.H6("📖 References:", className="mt-3 mb-2"),
+            html.Ul([
+                html.Li([
+                    html.Strong(f"Page {page}: "),
+                    html.Span(para)
+                ], className="mb-1") for para, page in references.items()
+            ], className="small")
+        ])
 
-    # Build card body children, filtering out None values
-    card_body_children = [html.P(description, className="card-text")]
-    if references_text:
-        card_body_children.append(html.Small(references_text, className="text-muted"))
-
-    return dbc.Card(
+    return dbc.Accordion(
         [
-            dbc.CardHeader(
-                [
-                    html.H5(
-                        [
-                            icon + " " + title,
-                            dbc.Badge(status, color=card_color, className="ms-2"),
-                        ],
-                        className="mb-0",
-                    )
-                ]
-            ),
-            dbc.CardBody(card_body_children),
+            dbc.AccordionItem(
+                accordion_content,
+                title=html.Div([
+                    html.Span(f"{icon} {title}", className=header_class),
+                    dbc.Badge(status, color=badge_color, className="ms-2 float-end"),
+                ]),
+                item_id=f"accordion-{title.lower().replace(' ', '-')}",
+            )
         ],
-        color=card_color,
-        outline=True,
+        start_collapsed=True,
         className="mb-3",
     )
-
 
 def create_contract_summary_filled(contract_info):
     """Create filled contract summary card"""
