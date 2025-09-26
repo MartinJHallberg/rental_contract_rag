@@ -5,6 +5,10 @@ This is a demo application that uses Retrieval-Augmented Generation (RAG) to ana
 ## Demo
 
 
+
+https://github.com/user-attachments/assets/2c6627ff-5c28-4300-a718-ec328e821ca8
+
+
 ## 🚀 Features
 
 - **PDF Contract Upload**: Drag and drop or upload rental contract PDFs
