@@ -2,6 +2,9 @@
 
 This is a demo application that uses Retrieval-Augmented Generation (RAG) to analyze rental contracts against Danish Rental Law. Upload your rental contract PDF and get instant analysis for potential legal issues and violations.
 
+## Demo
+
+
 ## 🚀 Features
 
 - **PDF Contract Upload**: Drag and drop or upload rental contract PDFs
