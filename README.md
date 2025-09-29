@@ -6,7 +6,8 @@ This is a demo application that uses Retrieval-Augmented Generation (RAG) to ana
 
 
 
-https://github.com/user-attachments/assets/2c6627ff-5c28-4300-a718-ec328e821ca8
+https://github.com/user-attachments/assets/7a2ccace-113d-404c-b449-e61081fb8f3a
+
 
 
 ## 🚀 Features
