@@ -1,9 +1,12 @@
-# Rental Contract RAG Checker 🏠
+# Rental Contract Checker 🏠
 
 This is a demo application that uses Retrieval-Augmented Generation (RAG) to analyze rental contracts against Danish Rental Law. Upload your rental contract PDF and get instant analysis for potential legal issues and violations.
 
+*Note: RAG is quite overkill since ChatGPT very well can analyze a rental contract and refer to paragraphs. The goal with this project was however to learn how to set up a RAG pipeline in a somewhat realistic scenario.*
+
 ## Demo
 
+Play in 1.5x speed (for now :) )
 
 
 https://github.com/user-attachments/assets/7a2ccace-113d-404c-b449-e61081fb8f3a
@@ -17,6 +20,10 @@ https://github.com/user-attachments/assets/7a2ccace-113d-404c-b449-e61081fb8f3a
 - **Legal Compliance Check**: Compares contracts against Danish Rental Act (Lejeloven)
 - **Interactive Web Interface**: Clean, responsive web app built with Dash
 
+## 🔧 To be improved 
+- **Speed**
+- **Correct flaggin**: Deposit and prepayment sometimes flagged even though correct
+- **Paragraph number and page**: Paragraph number and page is sometimes wrong.
 
 ## 📋 Prerequisites
 
@@ -136,8 +143,6 @@ rental_contract_rag/
 
 ## 🚨 Troubleshooting
 
-### Common Issues
-
 1. **API Key Errors**
    - Ensure your OpenAI API key is correctly set in `.env`
    - Check that you have sufficient API credits
@@ -145,13 +150,6 @@ rental_contract_rag/
 2. **PDF Processing Issues**
    - Make sure your PDF is text-based (not scanned images)
    - Try a different PDF if extraction fails
-
-3. **Memory Issues**
-   - Large PDFs may require more memory
-   - Consider reducing the chunk size in `config.py`
-
-4. **Port Already in Use**
-   - Change the port in `app.py`: `app.run_server(port=8051)`
 
 
 ## 📄 License
